@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Crash Detector</string>
+    <string name="app_logo">app_logo</string>
+    <string name="tagline">Guard Your Phone.\nSecure Your Connection.</string>
+    <string name="get_started">Get Started!</string>
+    <string name="sign_in_with_google">Sign In With Google</string>
+</resources>
