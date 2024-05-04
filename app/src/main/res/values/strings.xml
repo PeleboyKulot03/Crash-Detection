@@ -4,4 +4,24 @@
     <string name="tagline">Guard Your Phone.\nSecure Your Connection.</string>
     <string name="get_started">Get Started!</string>
     <string name="sign_in_with_google">Sign In With Google</string>
+    <string name="default_web_client_id">578571194563-ng4sa7khc47ek9nsc0kbpf62tguqk0kc.apps.googleusercontent.com</string>
+    <string name="menu">menu bar</string>
+    <string name="fall_detector">Fall Detector</string>
+    <string name="nav_open">open</string>
+    <string name="nav_close">close</string>
+    <string name="lorem">lorem ipsum</string>
+    <string name="profile">profile picture</string>
+    <string name="sample_name">Lorem Ipsum Name</string>
+    <string name="sample_email">loremipsum@gmail.com</string>
+    <string name="left_phone">Left Phone Detector</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="x_axis">X-AXIS:</string>
+    <string name="x_axis_value_velocity">" 10.32 m/s\u00B2"</string>
+    <string name="x_axis_value_rad">" 10.32 rad/s\u00B2"</string>
+    <string name="y_axis">Y-AXIS:</string>
+    <string name="z_axis">Z-AXIS:</string>
+    <string name="acceleration">Acceleration</string>
+    <string name="angular_velocity">Angular Velocity</string>
+
 </resources>

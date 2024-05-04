@@ -1,5 +1,6 @@
 package com.example.crashdetector.ui.main;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -9,6 +10,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.crashdetector.R;
+import com.example.crashdetector.ui.homepage.HomePageActivity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,5 +24,6 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        startActivity(new Intent(getApplicationContext(), HomePageActivity.class));
     }
 }

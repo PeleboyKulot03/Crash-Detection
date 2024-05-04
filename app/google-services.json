@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "578571194563",
+    "project_id": "crash-detector-e726a",
+    "storage_bucket": "crash-detector-e726a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:578571194563:android:60deb6e78ea82ae6b99276",
+        "android_client_info": {
+          "package_name": "com.example.crashdetector"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "578571194563-t414ntp79tou6css1rc28eeh4ksb9s50.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnG6fgRpZELh1yHumq65nx4NLk6rqt1uM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "578571194563-t414ntp79tou6css1rc28eeh4ksb9s50.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

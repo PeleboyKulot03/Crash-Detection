@@ -2,10 +2,11 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="gray">#808080</color>
 
-    <color name="primary">#153448</color>
-    <color name="primary_variant">#3C5B6F</color>
-    <color name="secondary">#948979</color>
-    <color name="secondary_variant">#DFD0B8</color>
+    <color name="primary">#070F2B</color>
+    <color name="primary_variant">#1B1A55</color>
+    <color name="secondary">#535C91</color>
+    <color name="secondary_variant">#9290C3</color>
 
 </resources>
