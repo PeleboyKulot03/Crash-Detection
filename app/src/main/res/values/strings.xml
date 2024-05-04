@@ -18,10 +18,12 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="x_axis">X-AXIS:</string>
     <string name="x_axis_value_velocity">" 10.32 m/s\u00B2"</string>
-    <string name="x_axis_value_rad">" 10.32 rad/s\u00B2"</string>
+    <string name="x_axis_value_rad">" — rad/s\u00B2"</string>
     <string name="y_axis">Y-AXIS:</string>
     <string name="z_axis">Z-AXIS:</string>
     <string name="acceleration">Acceleration</string>
     <string name="angular_velocity">Angular Velocity</string>
+    <string name="gyroscope_warning">sorry but this device does not support gyroscope</string>
+    <string name="accelerometer_warning">sorry but this device does not support accelerometer</string>
 
 </resources>
