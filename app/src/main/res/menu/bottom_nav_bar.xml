@@ -3,8 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/fallDetector"
-        android:contentDescription="@string/lorem"
-        android:icon="@drawable/google"
+        android:contentDescription="@string/fall_detector"
+        android:icon="@drawable/phone_drop"
+        android:iconTint="@color/white"
         app:showAsAction="ifRoom"
         android:title="@string/fall_detector"
         android:enabled="true"/>

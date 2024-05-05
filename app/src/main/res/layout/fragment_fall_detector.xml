@@ -45,7 +45,7 @@
                         android:paddingStart="10dp"
                         android:paddingEnd="10dp"
                         />
-                    <com.google.android.material.materialswitch.MaterialSwitch
+                    <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/accelerometerSwitch"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
@@ -233,7 +233,7 @@
                         android:paddingStart="10dp"
                         android:paddingEnd="10dp"
                         />
-                    <com.google.android.material.materialswitch.MaterialSwitch
+                    <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/gyroscopeSwitch"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
