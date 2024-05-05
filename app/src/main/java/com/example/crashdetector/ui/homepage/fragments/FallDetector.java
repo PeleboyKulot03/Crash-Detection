@@ -1,13 +1,24 @@
 package com.example.crashdetector.ui.homepage.fragments;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.ServiceCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.os.Handler;
@@ -20,12 +31,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.crashdetector.R;
+import com.example.crashdetector.ui.customview.ResultView;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class FallDetector extends Fragment implements SensorEventListener {
     private static final Float THRESHOLD = 15.0f;
@@ -34,9 +47,6 @@ public class FallDetector extends Fragment implements SensorEventListener {
     final float alpha = 0.8f;
     private float[] gravity = {0, 0, 0};
     private float[] linear_acceleration = {0, 0, 0};
-    private static final float NS2S = 1.0f / 1000000000.0f;
-    private final float[] deltaRotationVector = new float[4];
-    private float timestamp;
     private TextView xAxis;
     private TextView yAxis;
     private TextView zAxis;
@@ -46,7 +56,6 @@ public class FallDetector extends Fragment implements SensorEventListener {
     private ArrayList<Float> fallingValues;
     private String dropOrNot = "";
     private float[] mGravity;
-    private float mAccel;
     private float mAccelCurrent;
     private float mAccelLast;
     private int counter = 0;
@@ -54,11 +63,12 @@ public class FallDetector extends Fragment implements SensorEventListener {
     private int startFreeFallIndex = 0;
     private ArrayList<Float> zValues;
 
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_fall_detector, container, false);
-        mAccel = 0.00f;
+        float mAccel = 0.00f;
         mAccelCurrent = SensorManager.GRAVITY_EARTH;
         mAccelLast = SensorManager.GRAVITY_EARTH;
         if (getContext() != null) {
@@ -67,6 +77,10 @@ public class FallDetector extends Fragment implements SensorEventListener {
         if (getActivity() != null) {
             activity = getActivity();
         }
+
+        Intent intent = new Intent(getActivity(), ExampleService.class);
+        context.startForegroundService(intent);
+
         sensorManagerAccelerometer = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         SensorManager sensorManagerGyroscope = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         Sensor accelerometorSensor = sensorManagerAccelerometer.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -199,10 +213,14 @@ public class FallDetector extends Fragment implements SensorEventListener {
                             dropOrNot = "Your phone has been dropped!";
                         }
                     }
-                    Log.i("TAGERISTA", "onSensorChanged: " + temp);
+//                    Log.i("TAGERISTA", "onSensorChanged: " + temp);
 //                    Toast.makeText(context, dropOrNot, Toast.LENGTH_SHORT).show();
 //                    Log.i("TAGERISTA", "onSensorChanged: " + temp1);
-                    Log.i("TAGERISTA", "onSensorChanged: " + dropOrNot);
+//                    Log.i("TAGERISTA", "onSensorChanged: " + dropOrNot);
+
+                    ResultView resultView = new ResultView(context, dropOrNot);
+                    Objects.requireNonNull(resultView.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                    resultView.show();
                     sensorManagerAccelerometer.unregisterListener(this);
                     return;
                 }
@@ -220,4 +238,6 @@ public class FallDetector extends Fragment implements SensorEventListener {
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
+
+
 }

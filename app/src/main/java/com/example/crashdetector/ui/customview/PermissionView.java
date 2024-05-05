@@ -1,27 +1,27 @@
 package com.example.crashdetector.ui.customview;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.crashdetector.R;
 
-public class ResultView extends Dialog {
+public class PermissionView extends Dialog {
     private final String text;
-    public ResultView(@NonNull Context context, String text) {
+    private Activity activity;
+    public PermissionView(@NonNull Context context, String text) {
         super(context);
         this.text = text;
+        this.activity = (Activity) context;
     }
 
     @Override
@@ -41,6 +41,7 @@ public class ResultView extends Dialog {
         body.setText(text);
         button.setOnClickListener(v -> {
             dismiss();
+            activity.finish();
         });
     }
 }

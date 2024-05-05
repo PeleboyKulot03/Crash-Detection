@@ -26,5 +26,8 @@
     <string name="gyroscope_warning">sorry but this device does not support gyroscope</string>
     <string name="accelerometer_warning">sorry but this device does not support accelerometer</string>
     <string name="accelerometer_off">Accelerometer feature is turned off</string>
+    <string name="invalid_template">Warning Notice</string>
+    <string name="invalid_warning">Lorem Ipsum Dolor Sit Amet. Dolores Loromes Calamares</string>
+    <string name="okay">Okay</string>
 
 </resources>
