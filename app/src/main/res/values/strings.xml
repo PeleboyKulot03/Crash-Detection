@@ -29,5 +29,7 @@
     <string name="invalid_template">Warning Notice</string>
     <string name="invalid_warning">Lorem Ipsum Dolor Sit Amet. Dolores Loromes Calamares</string>
     <string name="okay">Okay</string>
+    <string name="inactivity">Inactivity:</string>
+    <string name="time_template">1 min : 20 sec</string>
 
 </resources>

@@ -1,7 +1,5 @@
-package com.example.crashdetector.ui.homepage.fragments;
+package com.example.crashdetector.ui.services;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -9,52 +7,35 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ServiceInfo;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.RingtoneManager;
 import android.os.Build;
-import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
-
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.ServiceCompat;
-
 import com.example.crashdetector.R;
-import com.example.crashdetector.ui.customview.ResultView;
 import com.example.crashdetector.ui.homepage.HomePageActivity;
-import com.example.crashdetector.ui.report.ReportActivity;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
 
-public class ExampleService extends Service implements SensorEventListener{
+public class FallDetectorSensor extends Service implements SensorEventListener{
     private static final Float THRESHOLD = 15.0f;
+    private static final int reqCode = 1;
     private static final String CHANNEL_ID = "channel_name";
-    private boolean isOn = true;
     private SensorManager sensorManagerAccelerometer;
     private boolean isFalling = false;
     private ArrayList<Float> fallingValues;
     private String dropOrNot = "";
-    private float[] mGravity;
-    private float mAccel;
     private float mAccelCurrent;
-    private float mAccelLast;
     private int counter = 0;
     private boolean beenFreeFall = false;
     private int startFreeFallIndex = 0;
-    private ArrayList<Float> zValues;
-
+    private Sensor accelerometorSensor;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         NotificationChannel chan = new NotificationChannel(
@@ -78,25 +59,20 @@ public class ExampleService extends Service implements SensorEventListener{
                 .build();
 
         startForeground( 100, notification);
-
-        zValues = new ArrayList<>();
         fallingValues = new ArrayList<>();
 
         sensorManagerAccelerometer = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
-        Sensor accelerometorSensor = sensorManagerAccelerometer.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        accelerometorSensor = sensorManagerAccelerometer.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
 
-        mAccel = 0.00f;
         mAccelCurrent = SensorManager.GRAVITY_EARTH;
-        mAccelLast = SensorManager.GRAVITY_EARTH;
         if (accelerometorSensor != null) {
             sensorManagerAccelerometer.registerListener(this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
         }
         else {
-
+            Intent newIntent = new Intent(getApplicationContext(), HomePageActivity.class);
+            showNotification(getApplicationContext(), "Warning Notice", "Sorry but an error occured while using your accelerometer", newIntent, reqCode);
         }
-
-
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -108,17 +84,17 @@ public class ExampleService extends Service implements SensorEventListener{
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            mGravity = event.values.clone();
+            float[] mGravity = event.values.clone();
             // Shake detection
             float x = mGravity[0];
             float y = mGravity[1];
             float z = mGravity[2];
-            mAccelLast = mAccelCurrent;
             mAccelCurrent = (float) Math.sqrt(x*x + y*y + z*z);
 
-            Log.i("TAGERISTA", "onSensorChanged: " + mAccelCurrent);
             if (!beenFreeFall) {
-                zValues.add(z);
+                if (fallingValues.size() >= 1000 && !isFalling) {
+                    fallingValues.subList(0, fallingValues.size() - 100).clear();
+                }
                 fallingValues.add(mAccelCurrent);
             }
             if (!isFalling) {
@@ -153,20 +129,15 @@ public class ExampleService extends Service implements SensorEventListener{
                             dropOrNot = "Your phone has been dropped!";
                         }
                     }
-//                    Log.i("TAGERISTA", "onSensorChanged: " + temp);
-//                    Toast.makeText(context, dropOrNot, Toast.LENGTH_SHORT).show();
-//                    Log.i("TAGERISTA", "onSensorChanged: " + temp1);
-//                    Log.i("TAGERISTA", "onSensorChanged: " + dropOrNot);
-
-//                    ResultView resultView = new ResultView(ExampleService.this, dropOrNot);
-//                    Objects.requireNonNull(resultView.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-//                    resultView.show();
-
-
-                    int reqCode = 1;
-                    Intent intent = new Intent(getApplicationContext(), ReportActivity.class);
-                    showNotification(this, "Warning Notice", dropOrNot, intent, reqCode);
                     sensorManagerAccelerometer.unregisterListener(this);
+                    Intent intent = new Intent(getApplicationContext(), HomePageActivity.class);
+                    showNotification(this, "Warning Notice", dropOrNot, intent, reqCode);
+                    fallingValues = new ArrayList<>();
+                    startFreeFallIndex = 0;
+                    counter = 0;
+                    beenFreeFall = false;
+                    isFalling = false;
+                    sensorManagerAccelerometer.registerListener(this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
                     return;
                 }
                 counter = 0;
@@ -180,7 +151,6 @@ public class ExampleService extends Service implements SensorEventListener{
     }
 
     public void showNotification(Context context, String title, String message, Intent intent, int reqCode) {
-
         PendingIntent pendingIntent = PendingIntent.getActivity(context, reqCode, intent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.mipmap.logo)
@@ -198,8 +168,6 @@ public class ExampleService extends Service implements SensorEventListener{
             notificationManager.createNotificationChannel(mChannel);
         }
         notificationManager.notify(reqCode, notificationBuilder.build());
-
-        Log.d("showNotification", "showNotification: " + reqCode);
     }
 
 }

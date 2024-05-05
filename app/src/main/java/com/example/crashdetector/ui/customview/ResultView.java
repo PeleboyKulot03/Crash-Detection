@@ -16,12 +16,15 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.crashdetector.R;
+import com.example.crashdetector.ui.homepage.fragments.IFallDetector;
 
 public class ResultView extends Dialog {
     private final String text;
-    public ResultView(@NonNull Context context, String text) {
+    private IFallDetector iFallDetector;
+    public ResultView(@NonNull Context context, String text, IFallDetector iFallDetector) {
         super(context);
         this.text = text;
+        this.iFallDetector = iFallDetector;
     }
 
     @Override
@@ -40,6 +43,7 @@ public class ResultView extends Dialog {
 
         body.setText(text);
         button.setOnClickListener(v -> {
+            iFallDetector.onFall();
             dismiss();
         });
     }

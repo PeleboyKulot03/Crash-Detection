@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
 
     <application
         android:allowBackup="true"
@@ -23,12 +24,15 @@
             android:exported="false" />
 
         <service
-            android:name=".ui.homepage.fragments.ExampleService"
+            android:name=".ui.services.FallDetectorSensor"
             android:exported="false"
             android:foregroundServiceType="health" />
-
+        <service
+            android:name=".ui.services.LeftPhoneService"
+            android:exported="false"
+            android:foregroundServiceType="health" />
         <receiver
-            android:name=".ui.homepage.fragments.BroadcastReceiver"
+            android:name=".ui.services.BroadcastReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -49,7 +53,6 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
