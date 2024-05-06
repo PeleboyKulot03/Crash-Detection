@@ -31,5 +31,10 @@
     <string name="okay">Okay</string>
     <string name="inactivity">Inactivity:</string>
     <string name="time_template">1 min : 20 sec</string>
+    <string name="sleep_mode">Sleep Mode</string>
+    <string name="sample_time">8:00 pm</string>
+    <string name="sample_time_day">8:00 am</string>
+    <string name="left_phone_warning">Left Phone Detector is turned off</string>
+    <string name="sleep_mode_text">The device is in sleep mode</string>
 
 </resources>

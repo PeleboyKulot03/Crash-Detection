@@ -17,17 +17,14 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 public class HomePageActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private FallDetector fallDetector;
-    private LeftPhoneFragment leftPhoneFragment;
     private final int FALL_DETECTOR = R.id.fallDetector;
     private final int DASH_BOARD = R.id.dashboard;
-    private final int PHONE_LEFT = R.id.phoneLeft;
     @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
         fallDetector = new FallDetector();
-        leftPhoneFragment = new LeftPhoneFragment();
 
         drawerLayout = findViewById(R.id.my_drawer_layout);
         MaterialToolbar toolbar = findViewById(R.id.toolBar);
@@ -43,11 +40,6 @@ public class HomePageActivity extends AppCompatActivity {
             if (menuItem.getItemId() == DASH_BOARD) {
 //                switchFragment();
                 toolbar.setTitle("Dashboard");
-                return true;
-            }
-            if (menuItem.getItemId() == PHONE_LEFT) {
-                switchFragment(leftPhoneFragment);
-                toolbar.setTitle("Left Phone Detector");
                 return true;
             }
             return true;

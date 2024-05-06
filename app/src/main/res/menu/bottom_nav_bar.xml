@@ -17,11 +17,4 @@
         app:showAsAction="ifRoom"
         android:title="@string/fall_detector"
         android:enabled="true"/>
-
-    <item
-        android:id="@+id/phoneLeft"
-        android:contentDescription="@string/lorem"
-        android:icon="@drawable/google"
-        app:showAsAction="ifRoom"
-        android:title="@string/left_phone" />
 </menu>

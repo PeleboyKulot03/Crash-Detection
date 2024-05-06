@@ -14,15 +14,23 @@ import android.os.Bundle;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 import com.example.crashdetector.R;
 import com.example.crashdetector.ui.customview.ResultView;
 import com.example.crashdetector.ui.services.FallDetectorSensor;
+import com.example.crashdetector.ui.services.LeftPhoneService;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -54,6 +62,8 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_fall_detector, container, false);
         mAccelCurrent = SensorManager.GRAVITY_EARTH;
+        String cur = LocalTime.now().toString();
+        LocalTime time = LocalTime.parse(cur);
         if (getContext() != null) {
             context = getContext();
         }
@@ -61,64 +71,29 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
             activity = getActivity();
         }
 
-        Intent intent = new Intent(getActivity(), FallDetectorSensor.class);
-        context.startForegroundService(intent);
-
         sensorManagerAccelerometer = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-        SensorManager sensorManagerGyroscope = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         accelerometorSensor = sensorManagerAccelerometer.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        Sensor gyroscopeSensor = sensorManagerGyroscope.getDefaultSensor(Sensor.TYPE_MOTION_DETECT);
-
-        SwitchMaterial gyroscopeSwitch = view.findViewById(R.id.gyroscopeSwitch);
+        SwitchMaterial leftPhoneSwitch = view.findViewById(R.id.leftPhoneSwitch);
         SwitchMaterial accelerometerSwitch = view.findViewById(R.id.accelerometerSwitch);
 
         xAxis = view.findViewById(R.id.xAxis);
         yAxis = view.findViewById(R.id.yAxis);
         zAxis = view.findViewById(R.id.zAxis);
         TextView accelerometerWarning = view.findViewById(R.id.warningAccelerometer);
-        TextView gyroscopeWarning = view.findViewById(R.id.warningGyroscope);
+        TextView leftPhoneWarning = view.findViewById(R.id.leftPhoneWarning);
         fallingValues = new ArrayList<>();
 
         if (accelerometorSensor != null) {
             sensorManagerAccelerometer.registerListener(FallDetector.this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
+            Intent intent = new Intent(getActivity(), FallDetectorSensor.class);
+            context.startForegroundService(intent);
+            Intent intent1 = new Intent(getActivity(), LeftPhoneService.class);
+            context.startForegroundService(intent1);
         }
         else {
             accelerometerWarning.setVisibility(View.VISIBLE);
             accelerometerSwitch.setChecked(false);
             accelerometerSwitch.setEnabled(false);
-        }
-        if (gyroscopeSensor != null) {
-            sensorManagerGyroscope.registerListener(new SensorEventListener() {
-                @Override
-                public void onSensorChanged(SensorEvent event) {
-                    gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-                    gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-                    gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
-
-                    linear_acceleration[0] = event.values[0] - gravity[0];
-                    linear_acceleration[1] = event.values[1] - gravity[1];
-                    linear_acceleration[2] = event.values[2] - gravity[2];
-
-                    activity.runOnUiThread(() -> {
-                        String xAxisText = String.format(Locale.getDefault(), "%.2f", (linear_acceleration[0]) > 0.99 ? linear_acceleration[0]:0) + " m/s²";
-                        String yAxisText = String.format(Locale.getDefault(), "%.2f", (linear_acceleration[1]) > 0.99 ? linear_acceleration[1]:0) + " m/s²";
-                        String zAxisText = String.format(Locale.getDefault(), "%.2f", (linear_acceleration[2]) > 0.99 ? linear_acceleration[2]:0) + " m/s²";
-                        xAxis.setText(xAxisText);
-                        yAxis.setText(yAxisText);
-                        zAxis.setText(zAxisText);
-                    });
-                }
-
-                @Override
-                public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-                }
-            }, gyroscopeSensor, Sensor.REPORTING_MODE_CONTINUOUS);
-        }
-        else {
-            gyroscopeWarning.setVisibility(View.VISIBLE);
-            gyroscopeSwitch.setEnabled(false);
-            gyroscopeSwitch.setChecked(false);
         }
 
         accelerometerSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -136,7 +111,44 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
             sensorManagerAccelerometer.registerListener(FallDetector.this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
             accelerometerWarning.setVisibility(View.GONE);
         });
+
+        leftPhoneSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (!isChecked) {
+                Intent intent = new Intent(getActivity(), LeftPhoneService.class);
+                intent.putExtra("off", "");
+                context.startForegroundService(intent);
+                leftPhoneWarning.setVisibility(View.VISIBLE);
+                if (isBetween(time, LocalTime.of(20, 0, 0), LocalTime.of(8, 0, 0))) {
+                    leftPhoneWarning.setText(getString(R.string.sleep_mode_text));
+                    return;
+                }
+                leftPhoneWarning.setText(getString(R.string.left_phone_warning));
+                return;
+            }
+            leftPhoneWarning.setVisibility(View.GONE);
+            Intent intent = new Intent(getActivity(), LeftPhoneService.class);
+            context.startForegroundService(intent);
+        });
+
+        if (isBetween(time, LocalTime.of(20, 0, 0), LocalTime.of(8, 0, 0))) {
+            leftPhoneWarning.setVisibility(View.VISIBLE);
+            leftPhoneWarning.setText(getString(R.string.sleep_mode_text));
+            Intent intent = new Intent(getActivity(), LeftPhoneService.class);
+            intent.putExtra("off", "");
+            context.startForegroundService(intent);
+            leftPhoneSwitch.setChecked(false);
+        }
+        else {
+            leftPhoneWarning.setVisibility(View.GONE);
+            Intent intent = new Intent(getActivity(), LeftPhoneService.class);
+            context.startForegroundService(intent);
+        }
+
         return view;
+    }
+
+    public static boolean isBetween(LocalTime candidate, LocalTime start, LocalTime end) {
+        return candidate.isAfter(start) || candidate.isBefore(end);
     }
 
     @Override

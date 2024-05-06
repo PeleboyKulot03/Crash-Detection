@@ -38,7 +38,7 @@
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:text="@string/acceleration"
+                        android:text="@string/fall_detector"
                         android:textSize="24sp"
                         android:fontFamily="@font/poppins_bold"
                         android:textColor="@color/black"
@@ -202,6 +202,7 @@
                     android:text="@string/accelerometer_warning"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -211,11 +212,11 @@
             android:background="@color/white"
             >
             <LinearLayout
-                android:background="@color/white"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="10dp"
+                android:background="@color/white"
                 >
                 <LinearLayout
                     android:background="@color/white"
@@ -223,10 +224,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
                     <TextView
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/angular_velocity"
+                        android:text="@string/left_phone"
                         android:textSize="24sp"
                         android:fontFamily="@font/poppins_bold"
                         android:textColor="@color/black"
@@ -234,8 +234,9 @@
                         android:paddingEnd="10dp"
                         />
                     <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/gyroscopeSwitch"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/leftPhoneSwitch"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
                         android:layout_height="match_parent"
                         android:checked="true"
                         app:thumbTint="@color/primary"
@@ -244,95 +245,6 @@
                         android:paddingStart="10dp"
                         />
 
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        app:cardElevation="3dp"
-                        app:cardUseCompatPadding="true"
-                        app:cardCornerRadius="10dp"
-                        android:layout_weight="1"
-                        >
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:background="@color/primary"
-                            android:gravity="center"
-                            android:padding="10dp">
-                            <ImageView
-                                android:layout_width="64dp"
-                                android:layout_height="64dp"
-                                android:src="@drawable/width_fill0_wght400_grad0_opsz24"
-                                android:contentDescription="@string/x_axis"
-                                />
-                            <TextView
-                                android:layout_marginTop="2dp"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/x_axis"
-                                android:fontFamily="@font/poppins_bold"
-                                android:textSize="18sp"
-                                android:textColor="@color/white"
-                                />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:text="@string/x_axis_value_rad"
-                                android:fontFamily="@font/poppins_regular"
-                                android:textSize="18sp"
-                                android:textColor="@color/white"
-                                />
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        app:cardElevation="3dp"
-                        app:cardUseCompatPadding="true"
-                        app:cardCornerRadius="10dp"
-                        android:layout_weight="1"
-                        >
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:background="@color/primary"
-                            android:gravity="center"
-                            android:padding="10dp">
-                            <ImageView
-                                android:layout_width="64dp"
-                                android:layout_height="64dp"
-                                android:src="@drawable/height_fill0_wght400_grad0_opsz24"
-                                android:contentDescription="@string/x_axis"
-                                />
-                            <TextView
-                                android:layout_marginTop="2dp"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/y_axis"
-                                android:fontFamily="@font/poppins_bold"
-                                android:textSize="18sp"
-                                android:textColor="@color/white"
-                                />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:text="@string/x_axis_value_rad"
-                                android:fontFamily="@font/poppins_regular"
-                                android:textSize="18sp"
-                                android:textColor="@color/white"
-                                />
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
                 </LinearLayout>
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
@@ -344,40 +256,115 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:orientation="vertical"
                         android:background="@color/secondary"
                         android:gravity="center_vertical"
                         android:padding="10dp">
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/autorenew_fill0_wght400_grad0_opsz24"
-                            android:contentDescription="@string/x_axis"
-                            android:layout_marginEnd="20dp"
-                            />
-                        <TextView
-                            android:layout_marginTop="2dp"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/z_axis"
-                            android:fontFamily="@font/poppins_bold"
-                            android:textSize="18sp"
-                            android:textColor="@color/white"
-                            />
-                        <TextView
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/x_axis_value_rad"
-                            android:fontFamily="@font/poppins_bold"
-                            android:textSize="18sp"
-                            android:textColor="@color/white"
-                            android:textAlignment="textEnd"
-                            />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:src="@drawable/hotel_24dp_fill0_wght400_grad0_opsz24"
+                                android:contentDescription="@string/x_axis"
+                                />
+                            <TextView
+                                android:layout_marginTop="2dp"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:text="@string/sleep_mode"
+                                android:fontFamily="@font/poppins_bold"
+                                android:textSize="18sp"
+                                android:layout_weight="1"
+                                android:textColor="@color/white"
+                                android:textAlignment="center"
+                                />
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:src="@drawable/edit_24dp_fill0_wght400_grad0_opsz24"
+                                android:contentDescription="@string/x_axis"
+                                />
+                        </LinearLayout>
+
+
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        app:cardElevation="3dp"
+                        app:cardUseCompatPadding="true"
+                        app:cardCornerRadius="10dp"
+                        android:layout_weight="1"
+                        >
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:background="@color/primary"
+                            android:gravity="center"
+                            android:padding="10dp">
+                            <ImageView
+                                android:layout_width="64dp"
+                                android:layout_height="64dp"
+                                android:src="@drawable/dark_mode_24dp_fill0_wght400_grad0_opsz24"
+                                android:contentDescription="@string/x_axis"
+                                />
+                            <TextView
+                                android:layout_marginTop="2dp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/sample_time"
+                                android:fontFamily="@font/poppins_bold"
+                                android:textSize="18sp"
+                                android:textColor="@color/white"
+                                />
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        app:cardElevation="3dp"
+                        app:cardUseCompatPadding="true"
+                        app:cardCornerRadius="10dp"
+                        android:layout_weight="1"
+                        >
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:background="@color/primary"
+                            android:gravity="center"
+                            android:padding="10dp">
+                            <ImageView
+                                android:layout_width="64dp"
+                                android:layout_height="64dp"
+                                android:src="@drawable/partly_cloudy_day_24dp_fill0_wght400_grad0_opsz24"
+                                android:contentDescription="@string/x_axis"
+                                />
+                            <TextView
+                                android:layout_marginTop="2dp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/sample_time_day"
+                                android:fontFamily="@font/poppins_bold"
+                                android:textSize="18sp"
+                                android:textColor="@color/white"
+                                />
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                </LinearLayout>
                 <TextView
-                    android:id="@+id/warningGyroscope"
+                    android:id="@+id/leftPhoneWarning"
                     android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -385,7 +372,7 @@
                     android:textColor="@color/gray"
                     android:textSize="16sp"
                     android:textAlignment="center"
-                    android:text="@string/gyroscope_warning"/>
+                    android:text="@string/accelerometer_warning"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
     </LinearLayout>
