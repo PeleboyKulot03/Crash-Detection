@@ -103,6 +103,9 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
                 counter = 0;
                 beenFreeFall = false;
                 isFalling = false;
+                Intent intent = new Intent(getActivity(), FallDetectorSensor.class);
+                intent.putExtra("off", "");
+                context.startForegroundService(intent);
                 sensorManagerAccelerometer.unregisterListener(FallDetector.this);
                 accelerometerWarning.setVisibility(View.VISIBLE);
                 accelerometerWarning.setText(activity.getString(R.string.accelerometer_off));
