@@ -1,6 +1,7 @@
 package com.example.crashdetector.ui.homepage.fragments;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -87,8 +88,10 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
             sensorManagerAccelerometer.registerListener(FallDetector.this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
             Intent intent = new Intent(getActivity(), FallDetectorSensor.class);
             context.startForegroundService(intent);
-            Intent intent1 = new Intent(getActivity(), LeftPhoneService.class);
-            context.startForegroundService(intent1);
+            if (!isBetween(time, LocalTime.of(20, 0, 0), LocalTime.of(8, 0, 0))) {
+                Intent intent1 = new Intent(getActivity(), LeftPhoneService.class);
+                context.startForegroundService(intent1);
+            }
         }
         else {
             accelerometerWarning.setVisibility(View.VISIBLE);
@@ -103,9 +106,12 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
                 counter = 0;
                 beenFreeFall = false;
                 isFalling = false;
-                Intent intent = new Intent(getActivity(), FallDetectorSensor.class);
-                intent.putExtra("off", "");
-                context.startForegroundService(intent);
+                if (isServiceRunningInForeground(getContext(), FallDetectorSensor.class)) {
+                    Intent intent = new Intent(getActivity(), FallDetectorSensor.class);
+                    intent.putExtra("off", "");
+                    context.startForegroundService(intent);
+                    return;
+                }
                 sensorManagerAccelerometer.unregisterListener(FallDetector.this);
                 accelerometerWarning.setVisibility(View.VISIBLE);
                 accelerometerWarning.setText(activity.getString(R.string.accelerometer_off));
@@ -113,13 +119,17 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
             }
             sensorManagerAccelerometer.registerListener(FallDetector.this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
             accelerometerWarning.setVisibility(View.GONE);
+            Intent intent = new Intent(getActivity(), FallDetectorSensor.class);
+            context.startForegroundService(intent);
         });
 
         leftPhoneSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (!isChecked) {
-                Intent intent = new Intent(getActivity(), LeftPhoneService.class);
-                intent.putExtra("off", "");
-                context.startForegroundService(intent);
+                if (isServiceRunningInForeground(getContext(), LeftPhoneService.class)) {
+                    Intent intent = new Intent(getActivity(), LeftPhoneService.class);
+                    intent.putExtra("off", "");
+                    context.startForegroundService(intent);
+                }
                 leftPhoneWarning.setVisibility(View.VISIBLE);
                 if (isBetween(time, LocalTime.of(20, 0, 0), LocalTime.of(8, 0, 0))) {
                     leftPhoneWarning.setText(getString(R.string.sleep_mode_text));
@@ -136,9 +146,11 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
         if (isBetween(time, LocalTime.of(20, 0, 0), LocalTime.of(8, 0, 0))) {
             leftPhoneWarning.setVisibility(View.VISIBLE);
             leftPhoneWarning.setText(getString(R.string.sleep_mode_text));
-            Intent intent = new Intent(getActivity(), LeftPhoneService.class);
-            intent.putExtra("off", "");
-            context.startForegroundService(intent);
+            if (isServiceRunningInForeground(getContext(), LeftPhoneService.class)) {
+                Intent intent = new Intent(getActivity(), LeftPhoneService.class);
+                intent.putExtra("off", "");
+                context.startForegroundService(intent);
+            }
             leftPhoneSwitch.setChecked(false);
         }
         else {
@@ -241,5 +253,15 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
         beenFreeFall = false;
         isFalling = false;
         sensorManagerAccelerometer.registerListener(FallDetector.this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
+    }
+
+    public static boolean isServiceRunningInForeground(Context context, Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return service.foreground;
+            }
+        }
+        return false;
     }
 }

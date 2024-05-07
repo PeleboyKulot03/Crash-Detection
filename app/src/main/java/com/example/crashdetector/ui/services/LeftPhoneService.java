@@ -14,6 +14,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.RingtoneManager;
 import android.os.Build;
+import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -30,16 +31,19 @@ public class LeftPhoneService extends Service implements SensorEventListener {
     private static final int reqCode = 5;
     private static final String CHANNEL_ID = "LEFT_PHONE_CHANNEL";
     private float mAccelCurrent;
-    private int counter = 0;
     private float mAccel;
     private float mAccelLast;
+    private final long MAX_TIME = 20 * 60000;
+    private final long diff = 1000;
 
+    private CountDownTimer downTimer;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent.hasExtra("off")) {
             stopForeground(true);
             stopSelfResult(startId);
+            super.onStartCommand(intent, flags, startId);
         }
         NotificationChannel chan = new NotificationChannel(
                 "LEFT_PHONE",
@@ -75,8 +79,23 @@ public class LeftPhoneService extends Service implements SensorEventListener {
         }
         else {
             Intent newIntent = new Intent(getApplicationContext(), HomePageActivity.class);
-            showNotification(getApplicationContext(), "Warning Notice", "Sorry but an error occured while using your accelerometer", newIntent, reqCode);
+            showNotification(getApplicationContext(), "Warning Notice", "Sorry but an error occurred while using your accelerometer", newIntent, reqCode);
         }
+
+        downTimer = new CountDownTimer(5000, diff) {
+
+            public void onTick(long millisUntilFinished) {
+                Log.i("TAGERISTA", "onTick: " + millisUntilFinished / 1000);
+            }
+
+            public void onFinish() {
+                // TODO: SEND  EMAIL
+                Log.i("TAGERISTA", "onFinish: are you awake?");
+                Intent intentYes = new Intent(getApplicationContext(), LeftPhoneService.class);
+                showNotificationWithActionButton(getApplicationContext(), "Alert Notice", "Are you still using the phone?", intentYes, 200);
+            }
+
+        }.start();
         return START_NOT_STICKY;
     }
 
@@ -94,7 +113,8 @@ public class LeftPhoneService extends Service implements SensorEventListener {
             mAccel = mAccel * 0.9f + delta;
 
             if (mAccel > 1){
-                counter = 0;
+                downTimer.cancel();
+                downTimer.start();
             }
         }
     }
@@ -124,6 +144,26 @@ public class LeftPhoneService extends Service implements SensorEventListener {
             CharSequence name = "Left Phone Channel";
             int importance = NotificationManager.IMPORTANCE_HIGH;
             NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, importance);
+            notificationManager.createNotificationChannel(mChannel);
+        }
+        notificationManager.notify(reqCode, notificationBuilder.build());
+    }
+
+    public void showNotificationWithActionButton(Context context, String title, String message, Intent intent, int reqCode) {
+        PendingIntent pendingIntentYes = PendingIntent.getActivity(context, reqCode, intent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, "CHANNEL_ID_BUTTON")
+                .setSmallIcon(R.mipmap.logo)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setAutoCancel(true)
+                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                .addAction(0, "Yes", pendingIntentYes);
+
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            CharSequence name = "Left Phone";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel mChannel = new NotificationChannel("CHANNEL_ID_BUTTON", name, importance);
             notificationManager.createNotificationChannel(mChannel);
         }
         notificationManager.notify(reqCode, notificationBuilder.build());

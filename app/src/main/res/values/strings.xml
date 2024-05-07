@@ -36,5 +36,7 @@
     <string name="sample_time_day">8:00 am</string>
     <string name="left_phone_warning">Left Phone Detector is turned off</string>
     <string name="sleep_mode_text">The device is in sleep mode</string>
+    <string name="to">To</string>
+    <string name="from">From</string>
 
 </resources>

@@ -41,6 +41,7 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
         if (intent.hasExtra("off")) {
             stopForeground(true);
             stopSelfResult(startId);
+            return super.onStartCommand(intent, flags, startId);
         }
         NotificationChannel chan = new NotificationChannel(
                 "MyChannelId",

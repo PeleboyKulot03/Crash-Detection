@@ -264,30 +264,25 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:gravity="center_vertical">
+                            android:gravity="center">
                             <ImageView
                                 android:layout_width="32dp"
                                 android:layout_height="32dp"
                                 android:src="@drawable/hotel_24dp_fill0_wght400_grad0_opsz24"
                                 android:contentDescription="@string/x_axis"
+                                android:layout_marginEnd="10dp"
                                 />
                             <TextView
                                 android:layout_marginTop="2dp"
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/sleep_mode"
                                 android:fontFamily="@font/poppins_bold"
                                 android:textSize="18sp"
-                                android:layout_weight="1"
                                 android:textColor="@color/white"
                                 android:textAlignment="center"
                                 />
-                            <ImageView
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
-                                android:src="@drawable/edit_24dp_fill0_wght400_grad0_opsz24"
-                                android:contentDescription="@string/x_axis"
-                                />
+
                         </LinearLayout>
 
 
@@ -298,6 +293,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
                     <androidx.cardview.widget.CardView
+                        android:id="@+id/fromTime"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         app:cardElevation="3dp"
@@ -322,6 +318,15 @@
                                 android:layout_marginTop="2dp"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:text="@string/from"
+                                android:fontFamily="@font/poppins_bold"
+                                android:textSize="18sp"
+                                android:textColor="@color/white"
+                                />
+                            <TextView
+                                android:layout_marginTop="2dp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                                 android:text="@string/sample_time"
                                 android:fontFamily="@font/poppins_bold"
                                 android:textSize="18sp"
@@ -330,6 +335,7 @@
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
                     <androidx.cardview.widget.CardView
+                        android:id="@+id/toTime"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         app:cardElevation="3dp"
@@ -349,6 +355,15 @@
                                 android:layout_height="64dp"
                                 android:src="@drawable/partly_cloudy_day_24dp_fill0_wght400_grad0_opsz24"
                                 android:contentDescription="@string/x_axis"
+                                />
+                            <TextView
+                                android:layout_marginTop="2dp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/to"
+                                android:fontFamily="@font/poppins_bold"
+                                android:textSize="18sp"
+                                android:textColor="@color/white"
                                 />
                             <TextView
                                 android:layout_marginTop="2dp"

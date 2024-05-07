@@ -2,6 +2,8 @@
 agp = "8.3.2"
 credentials = "1.2.2"
 googleid = "1.1.0"
+jakartaActivation = "2.0.1"
+jakartaMail = "2.0.1"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
@@ -18,6 +20,8 @@ firebaseDatabase = "20.3.1"
 credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
+jakarta-activation = { module = "com.sun.activation:jakarta.activation", version.ref = "jakartaActivation" }
+jakarta-mail = { module = "com.sun.mail:jakarta.mail", version.ref = "jakartaMail" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
