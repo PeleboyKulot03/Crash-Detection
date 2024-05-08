@@ -20,7 +20,6 @@ import com.bumptech.glide.Glide;
 import com.example.crashdetector.R;
 import com.example.crashdetector.ui.homepage.fragments.FallDetector;
 import com.example.crashdetector.ui.homepage.fragments.IFallDetector;
-import com.example.crashdetector.ui.homepage.fragments.LeftPhoneFragment;
 import com.example.crashdetector.ui.login.LoginPage;
 import com.example.crashdetector.ui.services.FallDetectorSensor;
 import com.example.crashdetector.utils.HomePageModel;

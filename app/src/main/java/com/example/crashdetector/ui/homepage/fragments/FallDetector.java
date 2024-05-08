@@ -56,6 +56,8 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
     private boolean isFalling = false;
     private ArrayList<Float> fallingValues;
     private String dropOrNot = "";
+    private String isDropped = "";
+
     private float mAccelCurrent;
     private int counter = 0;
     private boolean beenFreeFall = false;
@@ -63,7 +65,6 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
     private Sensor accelerometorSensor;
     private String email;
     private FallDetectorModel fallDetectorModel;
-
     public FallDetector(String email) {
         this.email = email;
     }
@@ -74,9 +75,10 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_fall_detector, container, false);
         mAccelCurrent = SensorManager.GRAVITY_EARTH;
+
         String cur = LocalTime.now().toString();
         LocalTime time = LocalTime.parse(cur);
-        fallDetectorModel = new FallDetectorModel(this);
+//        fallDetectorModel = new FallDetectorModel(this);
         if (getContext() != null) {
             context = getContext();
         }
@@ -99,6 +101,7 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
         if (accelerometorSensor != null) {
             sensorManagerAccelerometer.registerListener(FallDetector.this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
             Intent intent = new Intent(getActivity(), FallDetectorSensor.class);
+            intent.putExtra("email", email);
             context.startForegroundService(intent);
             if (!isBetween(time, LocalTime.of(20, 0, 0), LocalTime.of(8, 0, 0))) {
                 Intent intent1 = new Intent(getActivity(), LeftPhoneService.class);
@@ -132,6 +135,7 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
             sensorManagerAccelerometer.registerListener(FallDetector.this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
             accelerometerWarning.setVisibility(View.GONE);
             Intent intent = new Intent(getActivity(), FallDetectorSensor.class);
+            intent.putExtra("email", email);
             context.startForegroundService(intent);
         });
 
@@ -226,16 +230,20 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
                     for (int i = 0; i < 20; i++) {
                         if (temp.get(i) > THRESHOLD) {
                             dropOrNot = "Your phone has been thrown!";
+                            isDropped = " thrown!";
                             break;
                         }
                         dropOrNot = "Your phone has been dropped!";
+                        isDropped = " drop!";
                     }
                     if (dropOrNot.equals("Your phone has been dropped!")) {
                         for (int i = 1; i <= 8; i++) {
                             if (temp.get(i+20) > 2) {
+                                isDropped = " thrown!";
                                 dropOrNot = "Your phone has been thrown!";
                                 break;
                             }
+                            isDropped = " drop!";
                             dropOrNot = "Your phone has been dropped!";
                         }
                     }
@@ -245,8 +253,7 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
                         Objects.requireNonNull(resultView.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                         resultView.show();
                     }
-                    LocalDate currentDate = LocalDate.now();
-                    GMailSender sender = new GMailSender(email, "Fall Detected", "Hi, this email is to inform you that your phone " + getDeviceName() + " has been drop.");
+                    GMailSender sender = new GMailSender(email, "Fall Detected", "Hi, this email is to inform you that your phone " + getDeviceName() + "has been" + isDropped);
                     sender.execute();
 //                    FallDetectorModel model = new FallDetectorModel(getDeviceName(), currentDate.toString(), "Fall");
 //                    fallDetectorModel.generateReport(model);

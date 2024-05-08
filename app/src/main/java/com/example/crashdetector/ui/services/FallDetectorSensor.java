@@ -20,6 +20,8 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import com.example.crashdetector.R;
 import com.example.crashdetector.ui.homepage.HomePageActivity;
+import com.example.crashdetector.ui.homepage.fragments.GMailSender;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +38,7 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
     private boolean beenFreeFall = false;
     private int startFreeFallIndex = 0;
     private Sensor accelerometorSensor;
+    private String email;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent == null) {
@@ -45,6 +48,10 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
             stopForeground(true);
             stopSelfResult(startId);
             return super.onStartCommand(intent, flags, startId);
+        }
+
+        if (intent.hasExtra("email")) {
+            email = intent.getStringExtra("email");
         }
         NotificationChannel chan = new NotificationChannel(
                 "MyChannelId",
@@ -146,6 +153,8 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
                     beenFreeFall = false;
                     isFalling = false;
                     sensorManagerAccelerometer.registerListener(this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
+                    GMailSender sender = new GMailSender(email, "Fall Detected", "Hi, this email is to inform you that your phone " + getDeviceName() + " has been drop.");
+                    sender.execute();
                     return;
                 }
                 counter = 0;
@@ -176,6 +185,28 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
             notificationManager.createNotificationChannel(mChannel);
         }
         notificationManager.notify(reqCode, notificationBuilder.build());
+    }
+
+    public String getDeviceName() {
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+        if (model.toLowerCase().startsWith(manufacturer.toLowerCase())) {
+            return capitalize(model);
+        } else {
+            return capitalize(manufacturer) + " " + model;
+        }
+    }
+
+    private String capitalize(String s) {
+        if (s == null || s.length() == 0) {
+            return "";
+        }
+        char first = s.charAt(0);
+        if (Character.isUpperCase(first)) {
+            return s;
+        } else {
+            return Character.toUpperCase(first) + s.substring(1);
+        }
     }
 
 }
