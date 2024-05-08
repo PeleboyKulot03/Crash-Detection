@@ -8,5 +8,7 @@
     <color name="primary_variant">#1B1A55</color>
     <color name="secondary">#535C91</color>
     <color name="secondary_variant">#9290C3</color>
+    <color name="error">#C10000</color>
+
 
 </resources>

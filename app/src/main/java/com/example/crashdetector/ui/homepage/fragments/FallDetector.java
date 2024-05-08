@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.hardware.Sensor;
@@ -21,14 +22,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.example.crashdetector.R;
 import com.example.crashdetector.ui.customview.ResultView;
 import com.example.crashdetector.ui.services.FallDetectorSensor;
 import com.example.crashdetector.ui.services.LeftPhoneService;
+import com.example.crashdetector.utils.FallDetectorModel;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -56,6 +61,12 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
     private boolean beenFreeFall = false;
     private int startFreeFallIndex = 0;
     private Sensor accelerometorSensor;
+    private String email;
+    private FallDetectorModel fallDetectorModel;
+
+    public FallDetector(String email) {
+        this.email = email;
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Override
@@ -65,6 +76,7 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
         mAccelCurrent = SensorManager.GRAVITY_EARTH;
         String cur = LocalTime.now().toString();
         LocalTime time = LocalTime.parse(cur);
+        fallDetectorModel = new FallDetectorModel(this);
         if (getContext() != null) {
             context = getContext();
         }
@@ -233,6 +245,11 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
                         Objects.requireNonNull(resultView.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                         resultView.show();
                     }
+                    LocalDate currentDate = LocalDate.now();
+                    GMailSender sender = new GMailSender(email, "Fall Detected", "Hi, this email is to inform you that your phone " + getDeviceName() + " has been drop.");
+                    sender.execute();
+//                    FallDetectorModel model = new FallDetectorModel(getDeviceName(), currentDate.toString(), "Fall");
+//                    fallDetectorModel.generateReport(model);
                     return;
                 }
                 counter = 0;
@@ -255,6 +272,14 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
         sensorManagerAccelerometer.registerListener(FallDetector.this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
+    @Override
+    public void onGenerateReport(String message) {
+        GMailSender sender = new GMailSender(email, "Fall Detected", "Hi, this email is to inform you that your phone " + getDeviceName() + " has been drop.");
+        sender.execute();
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+
+    }
+
     public static boolean isServiceRunningInForeground(Context context, Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
@@ -263,5 +288,27 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
             }
         }
         return false;
+    }
+
+    public String getDeviceName() {
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+        if (model.toLowerCase().startsWith(manufacturer.toLowerCase())) {
+            return capitalize(model);
+        } else {
+            return capitalize(manufacturer) + " " + model;
+        }
+    }
+
+    private String capitalize(String s) {
+        if (s == null || s.length() == 0) {
+            return "";
+        }
+        char first = s.charAt(0);
+        if (Character.isUpperCase(first)) {
+            return s;
+        } else {
+            return Character.toUpperCase(first) + s.substring(1);
+        }
     }
 }

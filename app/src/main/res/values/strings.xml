@@ -3,7 +3,7 @@
     <string name="app_logo">app_logo</string>
     <string name="tagline">Guard Your Phone.\nSecure Your Connection.</string>
     <string name="get_started">Get Started!</string>
-    <string name="sign_in_with_google">Sign In With Google</string>
+    <string name="sign_in">Sign In</string>
     <string name="default_web_client_id">578571194563-ng4sa7khc47ek9nsc0kbpf62tguqk0kc.apps.googleusercontent.com</string>
     <string name="menu">menu bar</string>
     <string name="fall_detector">Fall Detector</string>
@@ -38,5 +38,28 @@
     <string name="sleep_mode_text">The device is in sleep mode</string>
     <string name="to">To</string>
     <string name="from">From</string>
+    <string name="or">or</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="login">Log In</string>
+    <string name="forgotten_password">Forgotten Password?</string>
+    <string name="email">Email</string>
+    <string name="logout">Logout</string>
+    <string name="progress">10%</string>
+    <string name="banner">image banner</string>
+    <string name="prompt">Hi Welcome to Crash Detector!</string>
+    <string name="button_prompt">Let\'s Get Started</string>
+    <string name="name_prompt">What is your name?</string>
+    <string name="first_name">Fist Name</string>
+    <string name="middle_name">Middle Name</string>
+    <string name="surname">Surname</string>
+    <string name="credentials_prompt">Almost done...</string>
+    <string name="say_cheese">Upload a Picture</string>
+    <string name="profile_picture">Profile Picture</string>
+    <string name="no_image_selected">No image selected yet...</string>
+    <string name="next">Next</string>
+    <string name="validate">Validate</string>
+    <string name="create">Create</string>
 
 </resources>

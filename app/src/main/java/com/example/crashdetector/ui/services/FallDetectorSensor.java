@@ -38,6 +38,9 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
     private Sensor accelerometorSensor;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent == null) {
+            return super.onStartCommand(intent, flags, startId);
+        }
         if (intent.hasExtra("off")) {
             stopForeground(true);
             stopSelfResult(startId);

@@ -26,10 +26,12 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.crashdetector.R;
 import com.example.crashdetector.ui.customview.PermissionView;
 import com.example.crashdetector.ui.homepage.HomePageActivity;
+import com.example.crashdetector.ui.login.LoginPage;
+import com.example.crashdetector.utils.MainModel;
 
 import java.util.Objects;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements IMain {
     private static final int PERMISSION_CODE = 100;
 
     @Override
@@ -38,7 +40,6 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        Log.i("TAGERISTA", "onCreate: " + getDeviceName());
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -48,35 +49,14 @@ public class MainActivity extends AppCompatActivity {
         requestUserPermission();
 
     }
-    public String getDeviceName() {
-        String manufacturer = Build.MANUFACTURER;
-        String model = Build.MODEL;
-        if (model.toLowerCase().startsWith(manufacturer.toLowerCase())) {
-            return capitalize(model);
-        } else {
-            return capitalize(manufacturer) + " " + model;
-        }
-    }
-
-    private String capitalize(String s) {
-        if (s == null || s.length() == 0) {
-            return "";
-        }
-        char first = s.charAt(0);
-        if (Character.isUpperCase(first)) {
-            return s;
-        } else {
-            return Character.toUpperCase(first) + s.substring(1);
-        }
-    }
     public void requestUserPermission() {
         if (Build.VERSION.SDK_INT >= 33) {
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, PERMISSION_CODE);
             }
             else {
-                startActivity(new Intent(getApplicationContext(), HomePageActivity.class));
-                finish();
+                MainModel mainModel = new MainModel(MainActivity.this);
+                mainModel.isSignedIn();
             }
         }
     }
@@ -91,11 +71,9 @@ public class MainActivity extends AppCompatActivity {
 
             // Checking whether user granted the permission or not.
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                // Showing the toast message
                 Toast.makeText(MainActivity.this, "Notification Permission Granted", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(getApplicationContext(), HomePageActivity.class));
-                finish();
+                MainModel mainModel = new MainModel(MainActivity.this);
+                mainModel.isSignedIn();
             }
             else {
                 PermissionView resultView = new PermissionView(MainActivity.this, "Sorry but Notification is required to use this application, go to settings and enable the notification.");
@@ -103,5 +81,16 @@ public class MainActivity extends AppCompatActivity {
                 resultView.show();
             }
         }
+    }
+
+    @Override
+    public void isSignedIn(boolean verdict) {
+        if (verdict) {
+            startActivity(new Intent(getApplicationContext(), HomePageActivity.class));
+            finish();
+            return;
+        }
+        startActivity(new Intent(getApplicationContext(), LoginPage.class));
+        finish();
     }
 }

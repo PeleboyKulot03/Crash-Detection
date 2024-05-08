@@ -64,6 +64,7 @@
     </RelativeLayout>
 
     <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navView"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
@@ -73,7 +74,22 @@
         app:itemIconTint="@color/black"
         app:itemBackground="@color/drawer_item"
         app:subheaderColor="@color/black"
-        app:headerLayout="@layout/nav_drawer_header"/>
+        app:headerLayout="@layout/nav_drawer_header">
+        <TextView
+            android:id="@+id/logout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/logout"
+            android:textColor="@color/white"
+            android:drawablePadding="10dp"
+            android:fontFamily="sans-serif-medium"
+            android:layout_gravity="bottom"
+            android:gravity="center"
+            android:padding="10dp"
+            android:background="@drawable/round_button"
+            android:backgroundTint="@color/primary"
+            android:layout_margin="20dp"/>
+    </com.google.android.material.navigation.NavigationView>
 
 
 
