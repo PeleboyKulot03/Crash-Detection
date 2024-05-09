@@ -47,9 +47,12 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
         if (intent.hasExtra("off")) {
             stopForeground(true);
             stopSelfResult(startId);
-            return super.onStartCommand(intent, flags, startId);
+            stopSelf();
+            Log.i("TAGERISTA", "onStartCommand: 1");
+            sensorManagerAccelerometer.unregisterListener(this);
+            return START_NOT_STICKY;
         }
-
+        Log.i("TAGERISTA", "onStartCommand: 2");
         if (intent.hasExtra("email")) {
             email = intent.getStringExtra("email");
         }
@@ -73,7 +76,7 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
                 .setChannelId("MyChannelId")
                 .build();
 
-        startForeground( 100, notification);
+        startForeground( 50, notification);
         fallingValues = new ArrayList<>();
 
         sensorManagerAccelerometer = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);

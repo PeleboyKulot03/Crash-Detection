@@ -68,7 +68,7 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
     public FallDetector(String email) {
         this.email = email;
     }
-
+    private boolean isLeftPhoneRunning = false;
     @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -105,7 +105,9 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
             context.startForegroundService(intent);
             if (!isBetween(time, LocalTime.of(20, 0, 0), LocalTime.of(8, 0, 0))) {
                 Intent intent1 = new Intent(getActivity(), LeftPhoneService.class);
+                intent1.putExtra("email", email);
                 context.startForegroundService(intent1);
+                isLeftPhoneRunning = true;
             }
         }
         else {
@@ -125,12 +127,11 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
                     Intent intent = new Intent(getActivity(), FallDetectorSensor.class);
                     intent.putExtra("off", "");
                     context.startForegroundService(intent);
+                    sensorManagerAccelerometer.unregisterListener(FallDetector.this);
+                    accelerometerWarning.setVisibility(View.VISIBLE);
+                    accelerometerWarning.setText(activity.getString(R.string.accelerometer_off));
                     return;
                 }
-                sensorManagerAccelerometer.unregisterListener(FallDetector.this);
-                accelerometerWarning.setVisibility(View.VISIBLE);
-                accelerometerWarning.setText(activity.getString(R.string.accelerometer_off));
-                return;
             }
             sensorManagerAccelerometer.registerListener(FallDetector.this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
             accelerometerWarning.setVisibility(View.GONE);
@@ -145,6 +146,7 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
                     Intent intent = new Intent(getActivity(), LeftPhoneService.class);
                     intent.putExtra("off", "");
                     context.startForegroundService(intent);
+                    isLeftPhoneRunning = false;
                 }
                 leftPhoneWarning.setVisibility(View.VISIBLE);
                 if (isBetween(time, LocalTime.of(20, 0, 0), LocalTime.of(8, 0, 0))) {
@@ -152,29 +154,18 @@ public class FallDetector extends Fragment implements SensorEventListener, IFall
                     return;
                 }
                 leftPhoneWarning.setText(getString(R.string.left_phone_warning));
-                return;
             }
-            leftPhoneWarning.setVisibility(View.GONE);
-            Intent intent = new Intent(getActivity(), LeftPhoneService.class);
-            context.startForegroundService(intent);
+            else {
+                if (!isServiceRunningInForeground(getContext(), LeftPhoneService.class) && !isLeftPhoneRunning) {
+                    Log.i("TAGERISTA", "onCreateView: ");
+                    leftPhoneWarning.setVisibility(View.GONE);
+                    Intent intent = new Intent(getActivity(), LeftPhoneService.class);
+                    intent.putExtra("email", email);
+                    context.startForegroundService(intent);
+                    isLeftPhoneRunning = true;
+                }
+            }
         });
-
-        if (isBetween(time, LocalTime.of(20, 0, 0), LocalTime.of(8, 0, 0))) {
-            leftPhoneWarning.setVisibility(View.VISIBLE);
-            leftPhoneWarning.setText(getString(R.string.sleep_mode_text));
-            if (isServiceRunningInForeground(getContext(), LeftPhoneService.class)) {
-                Intent intent = new Intent(getActivity(), LeftPhoneService.class);
-                intent.putExtra("off", "");
-                context.startForegroundService(intent);
-            }
-            leftPhoneSwitch.setChecked(false);
-        }
-        else {
-            leftPhoneWarning.setVisibility(View.GONE);
-            Intent intent = new Intent(getActivity(), LeftPhoneService.class);
-            context.startForegroundService(intent);
-        }
-
         return view;
     }
 

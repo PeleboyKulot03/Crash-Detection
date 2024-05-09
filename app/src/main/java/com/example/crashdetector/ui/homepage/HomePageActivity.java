@@ -102,11 +102,11 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
             name.setText(model.getName());
             imageUri = model.getImageUri();
             displayName = model.getName();
-            Glide.with(HomePageActivity.this)
-                    .load(model.getImageUri())
-                    .centerCrop()
-                    .circleCrop()
-                    .into(profilePic);
+//            Glide.with(HomePageActivity.this)
+//                    .load(model.getImageUri())
+//                    .centerCrop()
+//                    .circleCrop()
+//                    .into(profilePic);
 
             email.setText(model.getEmail());
             fallDetector = new FallDetector(model.getEmail());

@@ -23,6 +23,7 @@ import androidx.core.app.NotificationCompat;
 
 import com.example.crashdetector.R;
 import com.example.crashdetector.ui.homepage.HomePageActivity;
+import com.example.crashdetector.ui.homepage.fragments.GMailSender;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,17 +34,31 @@ public class LeftPhoneService extends Service implements SensorEventListener {
     private float mAccelCurrent;
     private float mAccel;
     private float mAccelLast;
-    private final long MAX_TIME = 20 * 60000;
+    private final long MAX_TIME = 3600000;
     private final long diff = 1000;
 
-    private CountDownTimer downTimer;
-
+    private CountDownTimer firstCounter;
+    private CountDownTimer secondCounter;
+    private boolean isInSecond = false;
+    private String email;
+    private SensorManager sensorManagerAccelerometer;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        sensorManagerAccelerometer = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
+        Sensor accelerometorSensor = sensorManagerAccelerometer.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (intent.hasExtra("off")) {
             stopForeground(true);
             stopSelfResult(startId);
-            super.onStartCommand(intent, flags, startId);
+            sensorManagerAccelerometer.unregisterListener(this);
+            return START_NOT_STICKY;
+        }
+        if (intent.hasExtra("email")) {
+            email = intent.getStringExtra("email");
+        }
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (intent.hasExtra("remove")) {
+            manager.cancel(200);
+            Log.i("TAGERISTA", "onStartCommand: test");
         }
         NotificationChannel chan = new NotificationChannel(
                 "LEFT_PHONE",
@@ -51,7 +66,6 @@ public class LeftPhoneService extends Service implements SensorEventListener {
                 NotificationManager.IMPORTANCE_HIGH);
         chan.setLightColor(Color.BLUE);
 
-        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         assert manager != null;
         manager.createNotificationChannel(chan);
 
@@ -65,10 +79,7 @@ public class LeftPhoneService extends Service implements SensorEventListener {
                 .setChannelId("LEFT_PHONE")
                 .build();
 
-        startForeground(200, notification);
-        SensorManager sensorManagerAccelerometer = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
-        Sensor accelerometorSensor = sensorManagerAccelerometer.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-
+        startForeground(100, notification);
 
         mAccelCurrent = SensorManager.GRAVITY_EARTH;
         mAccel = 0.00f;
@@ -81,9 +92,20 @@ public class LeftPhoneService extends Service implements SensorEventListener {
             Intent newIntent = new Intent(getApplicationContext(), HomePageActivity.class);
             showNotification(getApplicationContext(), "Warning Notice", "Sorry but an error occurred while using your accelerometer", newIntent, reqCode);
         }
+        secondCounter = new CountDownTimer(5000, diff) {
+            public void onTick(long millisUntilFinished) {
+                Log.i("TAGERISTA", "onTick: " + millisUntilFinished / 1000);
+            }
 
-        downTimer = new CountDownTimer(5000, diff) {
+            public void onFinish() {
+                // TODO: SEND  EMAIL
+                GMailSender sender = new GMailSender(email, "Left Phone Detector", "Hi, we notice an inactivity in with your phone. This email is to inform you that you might left your phone " + getDeviceName() + ".");
+                sender.execute();
+                sensorManagerAccelerometer.unregisterListener(LeftPhoneService.this);
+            }
 
+        };
+        firstCounter = new CountDownTimer(5000, diff) {
             public void onTick(long millisUntilFinished) {
                 Log.i("TAGERISTA", "onTick: " + millisUntilFinished / 1000);
             }
@@ -91,14 +113,18 @@ public class LeftPhoneService extends Service implements SensorEventListener {
             public void onFinish() {
                 // TODO: SEND  EMAIL
                 Log.i("TAGERISTA", "onFinish: are you awake?");
-                Intent intentYes = new Intent(getApplicationContext(), LeftPhoneService.class);
-                showNotificationWithActionButton(getApplicationContext(), "Alert Notice", "Are you still using the phone?", intentYes, 200);
+                Intent intentYes = new Intent(getApplicationContext(), HomePageActivity.class);
+                intentYes.putExtra("remove", "");
+                showNotification(getApplicationContext(), "Alert Notice", "Are you still using the phone?", intentYes, 200);
+                secondCounter.start();
             }
-
         }.start();
         return START_NOT_STICKY;
     }
 
+    public void onOff() {
+        sensorManagerAccelerometer.unregisterListener(LeftPhoneService.this);
+    }
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
@@ -112,9 +138,10 @@ public class LeftPhoneService extends Service implements SensorEventListener {
             float delta = mAccelCurrent - mAccelLast;
             mAccel = mAccel * 0.9f + delta;
 
-            if (mAccel > 1){
-                downTimer.cancel();
-                downTimer.start();
+            if (mAccel > .5) {
+                firstCounter.cancel();
+                firstCounter.start();
+                secondCounter.cancel();
             }
         }
     }
@@ -136,8 +163,8 @@ public class LeftPhoneService extends Service implements SensorEventListener {
                 .setContentTitle(title)
                 .setContentText(message)
                 .setAutoCancel(true)
-                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-                .setContentIntent(pendingIntent);
+                .setContentIntent(pendingIntent)
+                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -149,23 +176,25 @@ public class LeftPhoneService extends Service implements SensorEventListener {
         notificationManager.notify(reqCode, notificationBuilder.build());
     }
 
-    public void showNotificationWithActionButton(Context context, String title, String message, Intent intent, int reqCode) {
-        PendingIntent pendingIntentYes = PendingIntent.getActivity(context, reqCode, intent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, "CHANNEL_ID_BUTTON")
-                .setSmallIcon(R.mipmap.logo)
-                .setContentTitle(title)
-                .setContentText(message)
-                .setAutoCancel(true)
-                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-                .addAction(0, "Yes", pendingIntentYes);
-
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            CharSequence name = "Left Phone";
-            int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel mChannel = new NotificationChannel("CHANNEL_ID_BUTTON", name, importance);
-            notificationManager.createNotificationChannel(mChannel);
+    public String getDeviceName() {
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+        if (model.toLowerCase().startsWith(manufacturer.toLowerCase())) {
+            return capitalize(model);
+        } else {
+            return capitalize(manufacturer) + " " + model;
         }
-        notificationManager.notify(reqCode, notificationBuilder.build());
+    }
+
+    private String capitalize(String s) {
+        if (s == null || s.length() == 0) {
+            return "";
+        }
+        char first = s.charAt(0);
+        if (Character.isUpperCase(first)) {
+            return s;
+        } else {
+            return Character.toUpperCase(first) + s.substring(1);
+        }
     }
 }
