@@ -26,8 +26,8 @@ public class LoginModel {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for (DataSnapshot user: snapshot.getChildren()) {
-                    if (Objects.equals(user.child("informations").child("username").getValue(String.class), username)) {
-                        String email = user.child("informations").child("email").getValue(String.class);
+                    if (Objects.equals(user.child("username").getValue(String.class), username)) {
+                        String email = user.child("email").getValue(String.class);
                         if (email != null) {
                             auth.signInWithEmailAndPassword(email, password).addOnSuccessListener(task -> iLoginPage.onLogin(true, "Login Success!")).addOnFailureListener(e -> iLoginPage.onLogin(false, e.getMessage()));
                         }

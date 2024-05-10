@@ -12,7 +12,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.Ringtone;
 import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -20,7 +22,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import com.example.crashdetector.R;
 import com.example.crashdetector.ui.homepage.HomePageActivity;
-import com.example.crashdetector.ui.homepage.fragments.GMailSender;
+import com.example.crashdetector.ui.homepage.fragments.configs.GMailSender;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +41,7 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
     private int startFreeFallIndex = 0;
     private Sensor accelerometorSensor;
     private String email;
+    private Ringtone r;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent == null) {
@@ -51,6 +54,9 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
             Log.i("TAGERISTA", "onStartCommand: 1");
             sensorManagerAccelerometer.unregisterListener(this);
             return START_NOT_STICKY;
+        }
+        if (intent.hasExtra("stop")) {
+            stopSound();
         }
         Log.i("TAGERISTA", "onStartCommand: 2");
         if (intent.hasExtra("email")) {
@@ -117,12 +123,15 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
             }
             if (!isFalling) {
                 if (mAccelCurrent < 1) {
-                    isFalling = true;
-                    startFreeFallIndex = fallingValues.size();
+                    counter+=1;
+                    if (counter > 2) {
+                        isFalling = true;
+                        startFreeFallIndex = fallingValues.size();
+                    }
                 }
             }
             if (isFalling) {
-                if (mAccelCurrent >= 9 && mAccelCurrent <= 10 && counter < 10) {
+                if (mAccelCurrent >= 9 && mAccelCurrent <= 10 && counter < 12) {
                     counter += 1;
                     return;
                 }
@@ -149,15 +158,20 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
                     }
                     sensorManagerAccelerometer.unregisterListener(this);
                     Intent intent = new Intent(getApplicationContext(), HomePageActivity.class);
-                    showNotification(this, "Warning Notice", dropOrNot, intent, reqCode);
+                    if (dropOrNot.equals("Your phone has been dropped!")) {
+                        showNotification(this, "Warning Notice", dropOrNot, intent, reqCode);
+                    }
                     fallingValues = new ArrayList<>();
                     startFreeFallIndex = 0;
                     counter = 0;
                     beenFreeFall = false;
                     isFalling = false;
                     sensorManagerAccelerometer.registerListener(this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
-                    GMailSender sender = new GMailSender(email, "Fall Detected", "Hi, this email is to inform you that your phone " + getDeviceName() + " has been drop.");
-                    sender.execute();
+                    if (dropOrNot.equals("Your phone has been dropped!")) {
+                        GMailSender sender = new GMailSender(email, "Fall Detected", "Hi, this email is to inform you that your phone " + getDeviceName() + " has been drop.");
+                        sender.execute();
+                    }
+
                     return;
                 }
                 counter = 0;
@@ -177,8 +191,10 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
                 .setContentTitle(title)
                 .setContentText(message)
                 .setAutoCancel(true)
-                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                .setSound(null)
+                .setSilent(true)
                 .setContentIntent(pendingIntent);
+        playSound(getApplicationContext(), "C:\\Users\\Rose Ann Guarin\\StudioProjects\\Crash-Detection\\app\\src\\main\\res\\raw\\siren.mp3");
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -188,8 +204,19 @@ public class FallDetectorSensor extends Service implements SensorEventListener{
             notificationManager.createNotificationChannel(mChannel);
         }
         notificationManager.notify(reqCode, notificationBuilder.build());
+
+    }
+    private void playSound(Context context, String SoundUri){
+        Uri rawPathUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.siren1);
+        r = RingtoneManager.getRingtone(context, rawPathUri);
+        r.play();
     }
 
+    private void stopSound() {
+        if (r != null) {
+            r.stop();
+        }
+    }
     public String getDeviceName() {
         String manufacturer = Build.MANUFACTURER;
         String model = Build.MODEL;

@@ -1,4 +1,4 @@
-package com.example.crashdetector.ui.homepage.fragments;
+package com.example.crashdetector.ui.homepage.fragments.configs;
 
 import android.os.AsyncTask;
 

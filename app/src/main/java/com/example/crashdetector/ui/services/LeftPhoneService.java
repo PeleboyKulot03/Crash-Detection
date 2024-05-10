@@ -12,7 +12,10 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.AudioManager;
+import android.media.Ringtone;
 import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.IBinder;
@@ -23,10 +26,7 @@ import androidx.core.app.NotificationCompat;
 
 import com.example.crashdetector.R;
 import com.example.crashdetector.ui.homepage.HomePageActivity;
-import com.example.crashdetector.ui.homepage.fragments.GMailSender;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.example.crashdetector.ui.homepage.fragments.configs.GMailSender;
 
 public class LeftPhoneService extends Service implements SensorEventListener {
     private static final int reqCode = 5;
@@ -41,29 +41,44 @@ public class LeftPhoneService extends Service implements SensorEventListener {
     private CountDownTimer secondCounter;
     private boolean isInSecond = false;
     private String email;
+    private long time;
     private SensorManager sensorManagerAccelerometer;
+    private Ringtone r;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         sensorManagerAccelerometer = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
         Sensor accelerometorSensor = sensorManagerAccelerometer.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (intent.hasExtra("off")) {
+            Log.i("TAGERISTA", "onStartCommand: ");
             stopForeground(true);
             stopSelfResult(startId);
+            stopSound();
+            firstCounter.cancel();
+            secondCounter.cancel();
+            stopSelf();
             sensorManagerAccelerometer.unregisterListener(this);
             return START_NOT_STICKY;
         }
         if (intent.hasExtra("email")) {
             email = intent.getStringExtra("email");
         }
+        if (intent.hasExtra("time")) {
+            time = intent.getLongExtra("time", 0);
+            time *= 60000;
+        }
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (intent.hasExtra("remove")) {
             manager.cancel(200);
             Log.i("TAGERISTA", "onStartCommand: test");
         }
+        Uri uri = Uri.parse("android.resource://"
+                + getApplicationContext().getPackageName() + "/" + R.raw.siren);
         NotificationChannel chan = new NotificationChannel(
                 "LEFT_PHONE",
                 "My Left Phone Service",
                 NotificationManager.IMPORTANCE_HIGH);
+
         chan.setLightColor(Color.BLUE);
 
         assert manager != null;
@@ -71,6 +86,7 @@ public class LeftPhoneService extends Service implements SensorEventListener {
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(
                 this, "LEFT_PHONE");
+
         Notification notification = notificationBuilder.setOngoing(true)
                 .setSmallIcon(R.mipmap.logo)
                 .setContentTitle("Left Phone service is running on foreground")
@@ -92,7 +108,7 @@ public class LeftPhoneService extends Service implements SensorEventListener {
             Intent newIntent = new Intent(getApplicationContext(), HomePageActivity.class);
             showNotification(getApplicationContext(), "Warning Notice", "Sorry but an error occurred while using your accelerometer", newIntent, reqCode);
         }
-        secondCounter = new CountDownTimer(5000, diff) {
+        secondCounter = new CountDownTimer(time / 2, diff) {
             public void onTick(long millisUntilFinished) {
                 Log.i("TAGERISTA", "onTick: " + millisUntilFinished / 1000);
             }
@@ -103,9 +119,8 @@ public class LeftPhoneService extends Service implements SensorEventListener {
                 sender.execute();
                 sensorManagerAccelerometer.unregisterListener(LeftPhoneService.this);
             }
-
         };
-        firstCounter = new CountDownTimer(5000, diff) {
+        firstCounter = new CountDownTimer(time, diff) {
             public void onTick(long millisUntilFinished) {
                 Log.i("TAGERISTA", "onTick: " + millisUntilFinished / 1000);
             }
@@ -142,6 +157,7 @@ public class LeftPhoneService extends Service implements SensorEventListener {
                 firstCounter.cancel();
                 firstCounter.start();
                 secondCounter.cancel();
+                stopSound();
             }
         }
     }
@@ -164,7 +180,9 @@ public class LeftPhoneService extends Service implements SensorEventListener {
                 .setContentText(message)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
-                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
+                .setSound(null)
+                .setSilent(true);
+        playSound(getApplicationContext(), "C:\\Users\\Rose Ann Guarin\\StudioProjects\\Crash-Detection\\app\\src\\main\\res\\raw\\siren.mp3");
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -174,6 +192,18 @@ public class LeftPhoneService extends Service implements SensorEventListener {
             notificationManager.createNotificationChannel(mChannel);
         }
         notificationManager.notify(reqCode, notificationBuilder.build());
+    }
+
+    private void playSound(Context context, String SoundUri){
+        Uri rawPathUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.siren1);
+        r = RingtoneManager.getRingtone(context, rawPathUri);
+        r.play();
+    }
+
+    private void stopSound() {
+        if (r != null) {
+            r.stop();
+        }
     }
 
     public String getDeviceName() {

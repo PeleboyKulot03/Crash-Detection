@@ -1,31 +1,40 @@
 package com.example.crashdetector.utils;
 
 import android.net.Uri;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import com.example.crashdetector.ui.homepage.IHomePage;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.Objects;
 
 public class HomePageModel {
     private String name, email;
     private FirebaseAuth auth;
-    private Uri imageUri;
+    private Uri imageUrl;
     private IHomePage iHomePageActivity;
     private DatabaseReference databaseReference;
+    private long time= 0;
 
-    public HomePageModel(Uri imageUri, String name, String email) {
-        this.imageUri = imageUri;
+    public HomePageModel() {}
+    public HomePageModel(Uri imageUrl, String name, String email, long time) {
+        this.imageUrl = imageUrl;
         this.name = name;
         this.email = email;
+        this.time = time;
     }
     public HomePageModel(IHomePage iHomePageActivity) {
         auth = FirebaseAuth.getInstance();
         this.iHomePageActivity = iHomePageActivity;
-        databaseReference = FirebaseDatabase.getInstance().getReference("users").child(Objects.requireNonNull(auth.getCurrentUser()).getUid()).child("informations");
+        databaseReference = FirebaseDatabase.getInstance().getReference("users").child(Objects.requireNonNull(auth.getCurrentUser()).getUid());
     }
 
     public String getName() {
@@ -37,7 +46,7 @@ public class HomePageModel {
     }
 
     public Uri getImageUri() {
-        return imageUri;
+        return imageUrl;
     }
 
     public void getInformation() {
@@ -46,12 +55,35 @@ public class HomePageModel {
             Uri uri = user.getPhotoUrl();
             String name = user.getDisplayName();
             String email = user.getEmail();
-            HomePageModel model = new HomePageModel(uri, name, email);
-            iHomePageActivity.onGetUserData(model);
+//            HomePageModel model = new HomePageModel(uri, name, email);
+//            iHomePageActivity.onGetUserData(model);
         }
     }
     public void logout() {
         auth.signOut();
     }
 
+    public void getNewTime() {
+        Log.i("TAGERISTER", "getNewTime: ");
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                HomePageModel homePageModel = (snapshot.getValue(HomePageModel.class));
+                iHomePageActivity.onGetUserData(homePageModel);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    public long getTime() {
+        return time;
+    }
+
+    public void setNewTime(int i) {
+        databaseReference.child("time").setValue(i);
+    }
 }

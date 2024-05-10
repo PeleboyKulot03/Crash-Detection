@@ -1,4 +1,4 @@
-package com.example.crashdetector.ui.homepage.fragments;
+package com.example.crashdetector.ui.homepage.fragments.configs;
 /*
  *  Licensed to the Apache Software Foundation (ASF) under one or more
  *  contributor license agreements.  See the NOTICE file distributed with

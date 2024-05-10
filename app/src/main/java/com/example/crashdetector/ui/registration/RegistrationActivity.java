@@ -105,7 +105,7 @@ public class RegistrationActivity extends AppCompatActivity implements IRegistra
                     finalEmail = emailET.getText().toString();
                     finalPassword = passwordET.getText().toString();
                     isValid = true;
-                    RegistrationModel registrationPageModel = new RegistrationModel(finalUsername, finalEmail, finalName, finalMiddleName, finalSurname);
+                    RegistrationModel registrationPageModel = new RegistrationModel(finalUsername, finalEmail, finalName, finalMiddleName, finalSurname, "", 60);
                     model.createNewUser(registrationPageModel, finalPassword, finalUri);
                     return;
                 }

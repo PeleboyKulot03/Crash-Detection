@@ -15,6 +15,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.example.crashdetector.R;
+import com.example.crashdetector.ui.forgotpassword.ForgotPasswordActivity;
 import com.example.crashdetector.ui.homepage.HomePageActivity;
 import com.example.crashdetector.ui.registration.RegistrationActivity;
 import com.example.crashdetector.utils.LoginModel;
@@ -35,6 +36,7 @@ public class LoginPage extends AppCompatActivity implements ILoginPage {
         EditText passwordET = findViewById(R.id.passwordET);
         LoginModel model = new LoginModel(this);
         Button loginButton = findViewById(R.id.logIn);
+        TextView forgotPassword = findViewById(R.id.forgotPassword);
         loginButton.setOnClickListener(v -> {
             progressBar.setVisibility(View.VISIBLE);
             String username = usernameET.getText().toString();
@@ -46,6 +48,13 @@ public class LoginPage extends AppCompatActivity implements ILoginPage {
         signUp.setOnClickListener(v -> {
             startActivity(new Intent(getApplicationContext(), RegistrationActivity.class));
             finish();
+        });
+
+        forgotPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getApplicationContext(), ForgotPasswordActivity.class));
+            }
         });
     }
 

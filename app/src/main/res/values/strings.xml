@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Crash Detector</string>
+    <string name="app_name">Mobile Guard</string>
     <string name="app_logo">app_logo</string>
     <string name="tagline">Guard Your Phone.\nSecure Your Connection.</string>
     <string name="get_started">Get Started!</string>
@@ -30,7 +30,7 @@
     <string name="invalid_warning">Lorem Ipsum Dolor Sit Amet. Dolores Loromes Calamares</string>
     <string name="okay">Okay</string>
     <string name="inactivity">Inactivity:</string>
-    <string name="time_template">1 min : 20 sec</string>
+    <string name="time_template">60min</string>
     <string name="sleep_mode">Sleep Mode</string>
     <string name="sample_time">8:00 pm</string>
     <string name="sample_time_day">8:00 am</string>
@@ -48,10 +48,10 @@
     <string name="logout">Logout</string>
     <string name="progress">10%</string>
     <string name="banner">image banner</string>
-    <string name="prompt">Hi Welcome to Crash Detector!</string>
+    <string name="prompt">Hi Welcome to Mobile Guard!</string>
     <string name="button_prompt">Let\'s Get Started</string>
     <string name="name_prompt">What is your name?</string>
-    <string name="first_name">Fist Name</string>
+    <string name="first_name">First Name</string>
     <string name="middle_name">Middle Name</string>
     <string name="surname">Surname</string>
     <string name="credentials_prompt">Almost done...</string>
@@ -61,5 +61,9 @@
     <string name="next">Next</string>
     <string name="validate">Validate</string>
     <string name="create">Create</string>
+    <string name="forgot_password_prompt">Forgot Password</string>
+    <string name="time_default">--</string>
+    <string name="time_default_mode">min</string>
+
 
 </resources>
