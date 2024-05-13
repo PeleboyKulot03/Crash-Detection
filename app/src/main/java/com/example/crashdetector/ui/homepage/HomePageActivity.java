@@ -2,16 +2,24 @@ package com.example.crashdetector.ui.homepage;
 
 import static com.example.crashdetector.ui.homepage.fragments.FallDetector.isBetween;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
@@ -27,9 +35,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -44,6 +54,13 @@ import com.example.crashdetector.ui.login.LoginPage;
 import com.example.crashdetector.ui.services.FallDetectorSensor;
 import com.example.crashdetector.ui.services.LeftPhoneService;
 import com.example.crashdetector.utils.HomePageModel;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
@@ -52,6 +69,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.io.IOException;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,9 +77,13 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class HomePageActivity extends AppCompatActivity implements IHomePage, IFallDetector, SensorEventListener {
+
+    int LOCATION_REFRESH_TIME = 15000; // 15 seconds to update
+    int LOCATION_REFRESH_DISTANCE = 500; // 500 meters to update
+
     private DrawerLayout drawerLayout;
     private long finalTime;
-//    private FallDetector fallDetector;
+    //    private FallDetector fallDetector;
 //    private final int FALL_DETECTOR = R.id.fallDetector;
 //    private final int DASH_BOARD = R.id.dashboard;
     private TextView name, email;
@@ -84,20 +106,18 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
     private ArrayList<Float> fallingValues;
     private String dropOrNot = "";
     private String isDropped = "";
-    SwitchMaterial leftPhoneSwitch;
     SwitchMaterial accelerometerSwitch;
     private float mAccelCurrent;
     private int counter = 0;
     private boolean beenFreeFall = false;
     private int startFreeFallIndex = 0;
     private Sensor accelerometorSensor;
-    private boolean isLeftPhoneRunning = false;
-    private boolean isEdit = false;
-    private boolean isFirst = true;
-    private LocalTime time;
     TextView accelerometerWarning;
     TextView leftPhoneWarning;
     private ProgressBar progressBar;
+    private FusedLocationProviderClient fusedLocationProviderClient;
+    private LocationCallback locationCallback;
+    private LocationRequest locationRequest;
 
     @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Override
@@ -106,12 +126,12 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
         setContentView(R.layout.activity_home_page);
         HomePageModel model = new HomePageModel(this);
         context = getApplicationContext();
-        progressBar  = findViewById(R.id.progressBar);
+        progressBar = findViewById(R.id.progressBar);
         activity = HomePageActivity.this;
-
+        TextView lastLoc = findViewById(R.id.lastLoc);
+        accelerometerSwitch = findViewById(R.id.accelerometerSwitch);
         drawerLayout = findViewById(R.id.my_drawer_layout);
         MaterialToolbar toolbar = findViewById(R.id.toolBar);
-//        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavBar);
         NavigationView navView = findViewById(R.id.navView);
         View header = navView.getHeaderView(0);
         TextView logout = findViewById(R.id.logout);
@@ -119,22 +139,7 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
         email = header.findViewById(R.id.emailTV);
         profilePic = header.findViewById(R.id.profilePic);
         model.getNewTime();
-//        model.getInformation();
-//        switchFragment(fallDetector);
 
-//        bottomNavigationView.setOnItemSelectedListener(menuItem -> {
-//            if (menuItem.getItemId() == FALL_DETECTOR) {
-//                switchFragment(fallDetector);
-//                toolbar.setTitle("Fall Detector");
-//                return true;
-//            }
-//            if (menuItem.getItemId() == DASH_BOARD) {
-////                switchFragment();
-//                toolbar.setTitle("Dashboard");
-//                return true;
-//            }
-//            return true;
-//        });
         toolbar.setNavigationOnClickListener(item -> drawerLayout.openDrawer(GravityCompat.START));
         logout.setOnClickListener(v -> {
             if (isServiceRunningInForeground(getApplicationContext(), FallDetectorSensor.class)) {
@@ -148,45 +153,42 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
         });
 
         mAccelCurrent = SensorManager.GRAVITY_EARTH;
-        String cur = LocalTime.now().toString();
-        time = LocalTime.parse(cur);
         sensorManagerAccelerometer = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         accelerometorSensor = sensorManagerAccelerometer.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        leftPhoneSwitch = findViewById(R.id.leftPhoneSwitch);
-        accelerometerSwitch = findViewById(R.id.accelerometerSwitch);
-        CardView timeSetting = findViewById(R.id.time);
-        timeET = findViewById(R.id.timeET);
-        ImageView edit = findViewById(R.id.edit);
-//        ImageView done = findViewById(R.id.done);
-        timeSetting.setOnClickListener(v -> {
-            leftPhoneSwitch.setChecked(false);
-            timeET.setTextColor(getColor(R.color.white));
-            timeET.setEnabled(true);
-            edit.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        });
-
-        edit.setOnClickListener(v -> {
-            finalTime = Long.parseLong(timeET.getText().toString());
-
-            timeET.setTextColor(getColor(R.color.gray));
-            timeET.setEnabled(false);
-            edit.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT));
-            model.setNewTime(Integer.parseInt(timeET.getText().toString()));
-            leftPhoneSwitch.setChecked(true);
-        });
         xAxis = findViewById(R.id.xAxis);
         yAxis = findViewById(R.id.yAxis);
         zAxis = findViewById(R.id.zAxis);
         accelerometerWarning = findViewById(R.id.warningAccelerometer);
         leftPhoneWarning = findViewById(R.id.leftPhoneWarning);
         fallingValues = new ArrayList<>();
+
+        locationRequest = new com.google.android.gms.location.LocationRequest();
+        locationRequest.setInterval(1000 * 5);
+        locationRequest.setFastestInterval(1000 * 3);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                Location location = locationResult.getLastLocation();
+                Geocoder geocoder = new Geocoder(getApplicationContext());
+                try {
+                    List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                    assert addresses != null;
+                    lastLoc.setText(addresses.get(0).getAddressLine(0));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+            Log.i("TAGELELE", "onStartCommand: ");
+        }
+
     }
-
-
-
-//    public void switchFragment(Fragment fragment) {
-//        getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, fragment).commit();
-//    }
     public static boolean isServiceRunningInForeground(Context context, Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
@@ -211,24 +213,23 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
                     .into(profilePic);
 
             email.setText(model.getEmail());
-//            fallDetector = new FallDetector(model.getEmail());
 
-            timeET.setText(String.valueOf(model.getTime()));
             finalTime = model.getTime();
+            SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref",MODE_PRIVATE);
+            SharedPreferences.Editor myEdit = sharedPreferences.edit();
+            myEdit.putString("name", model.getEmail());
+            myEdit.apply();
         }
+        Intent intent1 = new Intent(HomePageActivity.this, LeftPhoneService.class);
+        intent1.putExtra("email", email.getText().toString());
+        intent1.putExtra("time", finalTime);
+        context.startForegroundService(intent1);
 
         if (accelerometorSensor != null) {
             sensorManagerAccelerometer.registerListener(HomePageActivity.this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
             Intent intent = new Intent(HomePageActivity.this, FallDetectorSensor.class);
             intent.putExtra("email", email.getText().toString());
             context.startForegroundService(intent);
-            if (!isBetween(time, LocalTime.of(20, 0, 0), LocalTime.of(8, 0, 0))) {
-                Intent intent1 = new Intent(HomePageActivity.this, LeftPhoneService.class);
-                intent1.putExtra("email", email.getText().toString());
-                intent1.putExtra("time", finalTime);
-                context.startForegroundService(intent1);
-                isLeftPhoneRunning = true;
-            }
         }
         else {
             accelerometerWarning.setVisibility(View.VISIBLE);
@@ -258,39 +259,6 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
             Intent intent = new Intent(HomePageActivity.this, FallDetectorSensor.class);
             intent.putExtra("email", email.getText().toString());
             context.startForegroundService(intent);
-        });
-        if (isBetween(time, LocalTime.of(20, 0, 0), LocalTime.of(8, 0, 0))) {
-            leftPhoneWarning.setVisibility(View.VISIBLE);
-            leftPhoneWarning.setText(getString(R.string.sleep_mode_text));
-            leftPhoneSwitch.setChecked(false);
-        }
-
-        leftPhoneSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Log.i("TAGERISTA", "onCreate: ");
-            if (!isChecked) {
-                if (isServiceRunningInForeground(getApplicationContext(), LeftPhoneService.class)) {
-                    Intent intent = new Intent(HomePageActivity.this, LeftPhoneService.class);
-                    intent.putExtra("off", "");
-                    context.startForegroundService(intent);
-                    isLeftPhoneRunning = false;
-                }
-                leftPhoneWarning.setVisibility(View.VISIBLE);
-                if (isBetween(time, LocalTime.of(20, 0, 0), LocalTime.of(8, 0, 0))) {
-                    leftPhoneWarning.setText(getString(R.string.sleep_mode_text));
-                    return;
-                }
-                leftPhoneWarning.setText(getString(R.string.left_phone_warning));
-                Log.i("TAGERISTA", "onCreate: ");
-            }
-            else {
-                Log.i("TAGERISTA", "onCreateView: ");
-                leftPhoneWarning.setVisibility(View.GONE);
-                Intent intent = new Intent(HomePageActivity.this, LeftPhoneService.class);
-                intent.putExtra("email", email.getText().toString());
-                intent.putExtra("time", finalTime);
-                context.startForegroundService(intent);
-                isLeftPhoneRunning = true;
-            }
         });
 
     }
@@ -414,10 +382,22 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
             }
         }
     }
+    private final LocationListener mLocationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(final Location location) {
+            //your code here
+            Log.i("TAGELELE", "onLocationChanged: " + location.getLongitude());
+        }
 
+    };
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
     }
 
     @Override

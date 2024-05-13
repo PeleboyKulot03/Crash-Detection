@@ -1,5 +1,6 @@
 package com.example.crashdetector.ui.services;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -7,11 +8,17 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -21,14 +28,24 @@ import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
 import com.example.crashdetector.R;
 import com.example.crashdetector.ui.homepage.HomePageActivity;
 import com.example.crashdetector.ui.homepage.fragments.configs.GMailSender;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 
-public class LeftPhoneService extends Service implements SensorEventListener {
+import java.io.IOException;
+import java.util.List;
+
+public class LeftPhoneService extends Service {
     private static final int reqCode = 5;
     private static final String CHANNEL_ID = "LEFT_PHONE_CHANNEL";
     private float mAccelCurrent;
@@ -44,166 +61,76 @@ public class LeftPhoneService extends Service implements SensorEventListener {
     private long time;
     private SensorManager sensorManagerAccelerometer;
     private Ringtone r;
+    private FusedLocationProviderClient fusedLocationProviderClient;
+    private LocationCallback locationCallback;
+    private LocationRequest locationRequest;
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        sensorManagerAccelerometer = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
-        Sensor accelerometorSensor = sensorManagerAccelerometer.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        if (intent.hasExtra("off")) {
-            Log.i("TAGERISTA", "onStartCommand: ");
-            stopForeground(true);
-            stopSelfResult(startId);
-            stopSound();
-            firstCounter.cancel();
-            secondCounter.cancel();
-            stopSelf();
-            sensorManagerAccelerometer.unregisterListener(this);
-            return START_NOT_STICKY;
-        }
-        if (intent.hasExtra("email")) {
-            email = intent.getStringExtra("email");
-        }
-        if (intent.hasExtra("time")) {
-            time = intent.getLongExtra("time", 0);
-            time *= 60000;
-        }
-        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (intent.hasExtra("remove")) {
-            manager.cancel(200);
-            Log.i("TAGERISTA", "onStartCommand: test");
-        }
-        Uri uri = Uri.parse("android.resource://"
-                + getApplicationContext().getPackageName() + "/" + R.raw.siren);
-        NotificationChannel chan = new NotificationChannel(
-                "LEFT_PHONE",
-                "My Left Phone Service",
-                NotificationManager.IMPORTANCE_HIGH);
 
+        NotificationChannel chan = new NotificationChannel(
+                "snatch",
+                "My Foreground Service",
+                NotificationManager.IMPORTANCE_HIGH);
         chan.setLightColor(Color.BLUE);
 
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         assert manager != null;
         manager.createNotificationChannel(chan);
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(
-                this, "LEFT_PHONE");
-
+                this, "snatch");
         Notification notification = notificationBuilder.setOngoing(true)
                 .setSmallIcon(R.mipmap.logo)
-                .setContentTitle("Left Phone service is running on foreground")
+                .setContentTitle("Snatch Protector is running on foreground")
                 .setPriority(NotificationManager.IMPORTANCE_HIGH)
                 .setCategory(Notification.CATEGORY_SERVICE)
-                .setChannelId("LEFT_PHONE")
+                .setChannelId("snatch")
                 .build();
 
-        startForeground(100, notification);
+        startForeground( 100, notification);
 
-        mAccelCurrent = SensorManager.GRAVITY_EARTH;
-        mAccel = 0.00f;
-        mAccelLast = SensorManager.GRAVITY_EARTH;
 
-        if (accelerometorSensor != null) {
-            sensorManagerAccelerometer.registerListener(this, accelerometorSensor, SensorManager.SENSOR_DELAY_FASTEST);
-        }
-        else {
-            Intent newIntent = new Intent(getApplicationContext(), HomePageActivity.class);
-            showNotification(getApplicationContext(), "Warning Notice", "Sorry but an error occurred while using your accelerometer", newIntent, reqCode);
-        }
-        secondCounter = new CountDownTimer(time / 2, diff) {
-            public void onTick(long millisUntilFinished) {
-                Log.i("TAGERISTA", "onTick: " + millisUntilFinished / 1000);
-            }
+        locationRequest = new com.google.android.gms.location.LocationRequest();
+        locationRequest.setInterval(1000 * 5);
+        locationRequest.setFastestInterval(1000 * 3);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-            public void onFinish() {
-                // TODO: SEND  EMAIL
-                GMailSender sender = new GMailSender(email, "Left Phone Detector", "Hi, we notice an inactivity in with your phone. This email is to inform you that you might left your phone " + getDeviceName() + ".");
-                sender.execute();
-                sensorManagerAccelerometer.unregisterListener(LeftPhoneService.this);
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                Location location = locationResult.getLastLocation();
+                Geocoder geocoder = new Geocoder(getApplicationContext());
+                try {
+                    List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                    assert addresses != null;
+                    Log.i("TAGELELE", "onSuccess: " + addresses.get(0).getAddressLine(0));
+                    SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref",MODE_PRIVATE);
+                    SharedPreferences.Editor myEdit = sharedPreferences.edit();
+                    myEdit.putString("location", addresses.get(0).getAddressLine(0));
+                    myEdit.apply();
+
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         };
-        firstCounter = new CountDownTimer(time, diff) {
-            public void onTick(long millisUntilFinished) {
-                Log.i("TAGERISTA", "onTick: " + millisUntilFinished / 1000);
-            }
-
-            public void onFinish() {
-                // TODO: SEND  EMAIL
-                Log.i("TAGERISTA", "onFinish: are you awake?");
-                Intent intentYes = new Intent(getApplicationContext(), HomePageActivity.class);
-                intentYes.putExtra("remove", "");
-                showNotification(getApplicationContext(), "Alert Notice", "Are you still using the phone?", intentYes, 200);
-                secondCounter.start();
-            }
-        }.start();
-        return START_NOT_STICKY;
-    }
-
-    public void onOff() {
-        sensorManagerAccelerometer.unregisterListener(LeftPhoneService.this);
-    }
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            float[] mGravity = event.values.clone();
-
-            float x = mGravity[0];
-            float y = mGravity[1];
-            float z = mGravity[2];
-            mAccelLast = mAccelCurrent;
-            mAccelCurrent = (float) Math.sqrt(x*x + y*y + z*z);
-            float delta = mAccelCurrent - mAccelLast;
-            mAccel = mAccel * 0.9f + delta;
-
-            if (mAccel > .5) {
-                firstCounter.cancel();
-                firstCounter.start();
-                secondCounter.cancel();
-                stopSound();
-            }
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+            Log.i("TAGELELE", "onStartCommand: ");
         }
-    }
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+
+        return START_NOT_STICKY;
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    public void showNotification(Context context, String title, String message, Intent intent, int reqCode) {
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, reqCode, intent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.mipmap.logo)
-                .setContentTitle(title)
-                .setContentText(message)
-                .setAutoCancel(true)
-                .setContentIntent(pendingIntent)
-                .setSound(null)
-                .setSilent(true);
-        playSound(getApplicationContext(), "C:\\Users\\Rose Ann Guarin\\StudioProjects\\Crash-Detection\\app\\src\\main\\res\\raw\\siren.mp3");
-
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            CharSequence name = "Left Phone Channel";
-            int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, importance);
-            notificationManager.createNotificationChannel(mChannel);
-        }
-        notificationManager.notify(reqCode, notificationBuilder.build());
-    }
-
-    private void playSound(Context context, String SoundUri){
-        Uri rawPathUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.siren1);
-        r = RingtoneManager.getRingtone(context, rawPathUri);
-        r.play();
-    }
-
-    private void stopSound() {
-        if (r != null) {
-            r.stop();
-        }
     }
 
     public String getDeviceName() {
