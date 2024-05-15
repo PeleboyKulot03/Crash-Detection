@@ -14,6 +14,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.HashMap;
 import java.util.Objects;
 
 public class HomePageModel {
@@ -25,11 +26,10 @@ public class HomePageModel {
     private long time= 0;
 
     public HomePageModel() {}
-    public HomePageModel(Uri imageUrl, String name, String email, long time) {
+    public HomePageModel(Uri imageUrl, String name, String email) {
         this.imageUrl = imageUrl;
         this.name = name;
         this.email = email;
-        this.time = time;
     }
     public HomePageModel(IHomePage iHomePageActivity) {
         auth = FirebaseAuth.getInstance();
@@ -55,26 +55,29 @@ public class HomePageModel {
             Uri uri = user.getPhotoUrl();
             String name = user.getDisplayName();
             String email = user.getEmail();
-//            HomePageModel model = new HomePageModel(uri, name, email);
-//            iHomePageActivity.onGetUserData(model);
+            HomePageModel model = new HomePageModel(uri, name, email);
+            iHomePageActivity.onGetUserData(model);
         }
     }
     public void logout() {
         auth.signOut();
     }
-
-    public void getNewTime() {
-        Log.i("TAGERISTER", "getNewTime: ");
-        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+    public void getModels() {
+        HashMap<String, String> models = new HashMap<>();
+        databaseReference.child("models").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                HomePageModel homePageModel = (snapshot.getValue(HomePageModel.class));
-                iHomePageActivity.onGetUserData(homePageModel);
+                for (DataSnapshot model: snapshot.getChildren()) {
+                    String key = model.getKey();
+                    String value = model.child("lastLoc").getValue(String.class);
+                    models.put(key, value);
+                }
+                iHomePageActivity.onGetModels(models);
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
+                iHomePageActivity.onGetModels(null);
             }
         });
     }

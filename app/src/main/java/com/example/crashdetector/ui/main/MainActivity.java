@@ -1,49 +1,41 @@
 package com.example.crashdetector.ui.main;
 
 import android.Manifest;
-import android.annotation.TargetApi;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.admin.DevicePolicyManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.example.crashdetector.R;
 import com.example.crashdetector.ui.customview.PermissionView;
 import com.example.crashdetector.ui.homepage.HomePageActivity;
 import com.example.crashdetector.ui.login.LoginPage;
-import com.example.crashdetector.ui.services.AdminReceiver;
-import com.example.crashdetector.ui.services.PowerButtonService;
 import com.example.crashdetector.utils.MainModel;
 
 import java.util.Objects;
 
+@RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
 public class MainActivity extends AppCompatActivity implements IMain {
     private static final int PERMISSION_CODE = 100;
-    public final static int REQUEST_CODE = 10101;
+    int PERMISSION_ALL = 1;
+    String[] PERMISSIONS = {
+            Manifest.permission.POST_NOTIFICATIONS,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,50 +43,24 @@ public class MainActivity extends AppCompatActivity implements IMain {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-
-
-
-        ComponentName cn=new ComponentName(this, AdminReceiver.class);
-        DevicePolicyManager mgr=
-                (DevicePolicyManager)getSystemService(DEVICE_POLICY_SERVICE);
-
-        if (mgr.isAdminActive(cn)) {
-            requestUserPermission();
-            int msgId;
-
-            if (mgr.isActivePasswordSufficient()) {
-                msgId=R.string.compliant;
-            }
-            else {
-                msgId=R.string.not_compliant;
-            }
-
-            Toast.makeText(this, msgId, Toast.LENGTH_LONG).show();
-            Log.i("TAGELELE", "onCreate: " );
+        if (!hasPermissions(this, PERMISSIONS)) {
+            ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
         }
         else {
-            Log.i("TAGELELE", "onCreate: 1" );
-            Intent intent=
-                    new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, cn);
-            intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                    getString(R.string.device_admin_explanation));
-            startActivity(intent);
+            MainModel mainModel = new MainModel(MainActivity.this);
+            mainModel.isSignedIn();
         }
-
     }
 
-
-
-    @Override
-    public boolean dispatchKeyEvent(KeyEvent event) {
-        int keyPressed = event.getKeyCode();
-        if(keyPressed==KeyEvent.KEYCODE_POWER){
-            Log.d("###","Power button long click");
-            Toast.makeText(MainActivity.this, "Clicked: "+keyPressed, Toast.LENGTH_SHORT).show();
-            return true;}
-        else
-            return super.dispatchKeyEvent(event);
+    public static boolean hasPermissions(Context context, String... permissions) {
+        if (context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -127,42 +93,12 @@ public class MainActivity extends AppCompatActivity implements IMain {
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_CODE);
             }
-
             else {
                 MainModel mainModel = new MainModel(MainActivity.this);
                 mainModel.isSignedIn();
             }
         }
     }
-
-
-    public boolean checkDrawOverlayPermission() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return true;
-        }
-        if (!Settings.canDrawOverlays(this)) {
-            /** if not construct intent to request permission */
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + getPackageName()));
-            /** request permission via start activity for result */
-            startActivityForResult(intent, REQUEST_CODE);
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    @Override
-    @TargetApi(Build.VERSION_CODES.M)
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE) {
-            if (Settings.canDrawOverlays(this)) {
-                startService(new Intent(this, PowerButtonService.class));
-            }
-        }
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
@@ -170,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements IMain {
     {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode == PERMISSION_CODE) {
+        if (requestCode == PERMISSION_ALL) {
 
             // Checking whether user granted the permission or not.
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {

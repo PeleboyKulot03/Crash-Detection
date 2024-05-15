@@ -28,10 +28,13 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -72,6 +75,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -115,9 +119,9 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
     TextView accelerometerWarning;
     TextView leftPhoneWarning;
     private ProgressBar progressBar;
-    private FusedLocationProviderClient fusedLocationProviderClient;
-    private LocationCallback locationCallback;
-    private LocationRequest locationRequest;
+    private Spinner spinner;
+    HashMap<String, String> models;
+
 
     @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Override
@@ -125,10 +129,11 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
         HomePageModel model = new HomePageModel(this);
+        models = new HashMap<>();
         context = getApplicationContext();
         progressBar = findViewById(R.id.progressBar);
         activity = HomePageActivity.this;
-        TextView lastLoc = findViewById(R.id.lastLoc);
+        spinner = findViewById(R.id.spinner);
         accelerometerSwitch = findViewById(R.id.accelerometerSwitch);
         drawerLayout = findViewById(R.id.my_drawer_layout);
         MaterialToolbar toolbar = findViewById(R.id.toolBar);
@@ -138,7 +143,9 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
         name = header.findViewById(R.id.nameTV);
         email = header.findViewById(R.id.emailTV);
         profilePic = header.findViewById(R.id.profilePic);
-        model.getNewTime();
+
+        accelerometerWarning = findViewById(R.id.warningAccelerometer);
+        leftPhoneWarning = findViewById(R.id.leftPhoneWarning);
 
         toolbar.setNavigationOnClickListener(item -> drawerLayout.openDrawer(GravityCompat.START));
         logout.setOnClickListener(v -> {
@@ -158,16 +165,14 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
         xAxis = findViewById(R.id.xAxis);
         yAxis = findViewById(R.id.yAxis);
         zAxis = findViewById(R.id.zAxis);
-        accelerometerWarning = findViewById(R.id.warningAccelerometer);
-        leftPhoneWarning = findViewById(R.id.leftPhoneWarning);
         fallingValues = new ArrayList<>();
 
-        locationRequest = new com.google.android.gms.location.LocationRequest();
+        LocationRequest locationRequest = new LocationRequest();
         locationRequest.setInterval(1000 * 5);
         locationRequest.setFastestInterval(1000 * 3);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        locationCallback = new LocationCallback() {
+        LocationCallback locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 super.onLocationResult(locationResult);
@@ -176,17 +181,19 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
                 try {
                     List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
                     assert addresses != null;
-                    lastLoc.setText(addresses.get(0).getAddressLine(0));
+//                    lastLoc.setText(addresses.get(0).getAddressLine(0));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
         };
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        FusedLocationProviderClient fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
-            Log.i("TAGELELE", "onStartCommand: ");
         }
+
+        model.getInformation();
+        model.getModels();
 
     }
     public static boolean isServiceRunningInForeground(Context context, Class<?> serviceClass) {
@@ -261,6 +268,11 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
             context.startForegroundService(intent);
         });
 
+        Button getLocation = findViewById(R.id.getLocation);
+        getLocation.setOnClickListener(v -> {
+            leftPhoneWarning.setText(models.get(spinner.getSelectedItem()));
+            leftPhoneWarning.setVisibility(View.VISIBLE);
+        });
     }
 
     @Override
@@ -268,6 +280,14 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
         timeET.setText(String.valueOf(time));
         finalTime = time;
         Log.i("TAGERISTAX", "onGetTime: "+ time);
+    }
+
+    @Override
+    public void onGetModels(HashMap<String, String> models) {
+        this.models = models;
+        List<String> values = new ArrayList<>(models.keySet());
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item, values);
+        spinner.setAdapter(adapter);
     }
 
     @Override
@@ -412,4 +432,5 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
         intent.putExtra("stop", "");
         getApplicationContext().startForegroundService(intent);
     }
+
 }

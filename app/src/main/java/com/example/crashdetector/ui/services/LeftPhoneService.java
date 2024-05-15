@@ -41,6 +41,10 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.IOException;
 import java.util.List;
@@ -53,7 +57,6 @@ public class LeftPhoneService extends Service {
     private float mAccelLast;
     private final long MAX_TIME = 3600000;
     private final long diff = 1000;
-
     private CountDownTimer firstCounter;
     private CountDownTimer secondCounter;
     private boolean isInSecond = false;
@@ -64,8 +67,7 @@ public class LeftPhoneService extends Service {
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
-
-
+    private DatabaseReference databaseReference;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -74,7 +76,10 @@ public class LeftPhoneService extends Service {
                 "My Foreground Service",
                 NotificationManager.IMPORTANCE_HIGH);
         chan.setLightColor(Color.BLUE);
-
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            databaseReference = FirebaseDatabase.getInstance().getReference("users").child(user.getUid());
+        }
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         assert manager != null;
         manager.createNotificationChannel(chan);
@@ -106,12 +111,8 @@ public class LeftPhoneService extends Service {
                 try {
                     List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
                     assert addresses != null;
-                    Log.i("TAGELELE", "onSuccess: " + addresses.get(0).getAddressLine(0));
-                    SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref",MODE_PRIVATE);
-                    SharedPreferences.Editor myEdit = sharedPreferences.edit();
-                    myEdit.putString("location", addresses.get(0).getAddressLine(0));
-                    myEdit.apply();
-
+                    Log.i("TAGELELE", "onLocationResult: "+ addresses.get(0).getAddressLine(0));
+                    databaseReference.child("models").child(getDeviceName()).child("lastLoc").setValue(addresses.get(0).getAddressLine(0));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -120,7 +121,6 @@ public class LeftPhoneService extends Service {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
-            Log.i("TAGELELE", "onStartCommand: ");
         }
 
 

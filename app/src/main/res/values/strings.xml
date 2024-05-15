@@ -70,6 +70,8 @@
     <string name="password_success">Congratulations!</string>
     <string name="device_admin_explanation">For experimentation purposes only</string>
     <string name="template">----</string>
+    <string name="last_location">Last Location</string>
+    <string name="snatch_phone">Snatch Detector</string>
 
 
 </resources>

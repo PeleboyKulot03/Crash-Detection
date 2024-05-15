@@ -2,10 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-
-    <uses-feature
-        android:name="android.software.device_admin"
-        android:required="true"/>
     <uses-permission android:name="android.permission.PREVENT_POWER_KEY" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
@@ -49,15 +45,6 @@
             android:name=".ui.services.LeftPhoneService"
             android:exported="false"
             android:foregroundServiceType="location" />
-
-        <receiver
-            android:name=".ui.services.BroadcastReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-
         <activity
             android:name=".ui.customview.ResultView"
             android:exported="false" />
@@ -76,22 +63,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <receiver
-            android:name=".ui.services.AdminReceiver"
-            android:exported="true"
-            android:permission="android.permission.BIND_DEVICE_ADMIN">
-            <meta-data
-                android:name="android.app.device_admin"
-                android:resource="@xml/device_admin"/>
-
-            <intent-filter>
-                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED"/>
-                <action android:name="android.app.action.ACTION_PASSWORD_CHANGED"/>
-                <action android:name="android.app.action.ACTION_PASSWORD_FAILED"/>
-                <action android:name="android.app.action.ACTION_PASSWORD_SUCCEEDED"/>
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>
