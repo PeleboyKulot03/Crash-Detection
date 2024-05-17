@@ -64,7 +64,7 @@ public class HomePageModel {
     }
     public void getModels() {
         HashMap<String, String> models = new HashMap<>();
-        databaseReference.child("models").addListenerForSingleValueEvent(new ValueEventListener() {
+        databaseReference.child("models").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for (DataSnapshot model: snapshot.getChildren()) {
