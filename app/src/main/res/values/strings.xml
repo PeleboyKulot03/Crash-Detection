@@ -72,6 +72,7 @@
     <string name="template">----</string>
     <string name="last_location">Last Location</string>
     <string name="snatch_phone">Snatch Detector</string>
+    <string name="location_detector">Location Detector</string>
 
 
 </resources>

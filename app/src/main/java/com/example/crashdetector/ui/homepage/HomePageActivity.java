@@ -5,6 +5,9 @@ import static com.example.crashdetector.ui.homepage.fragments.FallDetector.isBet
 import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.MediaRouteButton;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -121,6 +124,7 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
     private ProgressBar progressBar;
     private Spinner spinner;
     HashMap<String, String> models;
+    private LinearLayout addressHolder;
 
 
     @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
@@ -143,7 +147,8 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
         name = header.findViewById(R.id.nameTV);
         email = header.findViewById(R.id.emailTV);
         profilePic = header.findViewById(R.id.profilePic);
-
+        addressHolder = findViewById(R.id.addressHolder);
+        ImageView copy = findViewById(R.id.copy);
         accelerometerWarning = findViewById(R.id.warningAccelerometer);
         leftPhoneWarning = findViewById(R.id.leftPhoneWarning);
 
@@ -194,6 +199,11 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
 
         model.getInformation();
         model.getModels();
+        copy.setOnClickListener(v -> {
+            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("address", leftPhoneWarning.getText());
+            clipboard.setPrimaryClip(clip);
+        });
 
     }
     public static boolean isServiceRunningInForeground(Context context, Class<?> serviceClass) {
@@ -271,7 +281,7 @@ public class HomePageActivity extends AppCompatActivity implements IHomePage, IF
         Button getLocation = findViewById(R.id.getLocation);
         getLocation.setOnClickListener(v -> {
             leftPhoneWarning.setText(models.get(spinner.getSelectedItem()));
-            leftPhoneWarning.setVisibility(View.VISIBLE);
+            addressHolder.setVisibility(View.VISIBLE);
         });
     }
 
